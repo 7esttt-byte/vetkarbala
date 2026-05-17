@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 192 192">
+  <defs>
+    <radialGradient id="bg" cx="40%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#0d4a6e"/>
+      <stop offset="60%" stop-color="#0a1f3c"/>
+      <stop offset="100%" stop-color="#050d1a"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="35%" cy="25%" r="60%">
+      <stop offset="0%" stop-color="rgba(0,201,167,0.25)"/>
+      <stop offset="100%" stop-color="rgba(0,201,167,0)"/>
+    </radialGradient>
+    <linearGradient id="glass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.2)"/>
+      <stop offset="50%" stop-color="rgba(255,255,255,0.05)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.12)"/>
+    </linearGradient>
+    <linearGradient id="border" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(0,201,167,0.8)"/>
+      <stop offset="50%" stop-color="rgba(240,192,64,0.5)"/>
+      <stop offset="100%" stop-color="rgba(0,201,167,0.3)"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.35)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(0,201,167,0.4)"/>
+    </filter>
+    <clipPath id="roundclip"><rect x="20" y="20" width="152" height="152" rx="40"/></clipPath>
+  </defs>
+  
+  <!-- Outer glow ring -->
+  <rect x="8" y="8" width="176" height="176" rx="52" fill="none" stroke="url(#border)" stroke-width="2" opacity="0.6"/>
+  
+  <!-- Main bg -->
+  <rect x="20" y="20" width="152" height="152" rx="40" fill="url(#bg)"/>
+  
+  <!-- Glow blob -->
+  <rect x="20" y="20" width="152" height="152" rx="40" fill="url(#glow)"/>
+  
+  <!-- Glass layer -->
+  <rect x="20" y="20" width="152" height="152" rx="40" fill="url(#glass)"/>
+  
+  <!-- Inner border -->
+  <rect x="20" y="20" width="152" height="152" rx="40" fill="none" stroke="url(#border)" stroke-width="1.5" opacity="0.8"/>
+  
+  <!-- Shine (top-left highlight) -->
+  <ellipse cx="72" cy="65" rx="45" ry="30" fill="url(#shine)" clip-path="url(#roundclip)"/>
+  
+  <!-- Hospital cross -->
+  <!-- Horizontal bar -->
+  <rect x="64" y="86" width="64" height="20" rx="6" fill="white" opacity="0.92" filter="url(#shadow)"/>
+  <!-- Vertical bar -->
+  <rect x="86" y="64" width="20" height="64" rx="6" fill="white" opacity="0.92" filter="url(#shadow)"/>
+  
+  <!-- Teal accent dots -->
+  <circle cx="52" cy="52" r="5" fill="rgba(0,201,167,0.6)"/>
+  <circle cx="140" cy="140" r="4" fill="rgba(240,192,64,0.5)"/>
+  <circle cx="140" cy="52" r="3" fill="rgba(0,201,167,0.4)"/>
+  
+  <!-- Bottom text -->
+  <text x="96" y="158" text-anchor="middle" font-family="Arial,sans-serif" font-size="10" fill="rgba(0,201,167,0.9)" font-weight="bold" letter-spacing="2">SAIS</text>
+</svg>
