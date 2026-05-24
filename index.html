@@ -880,8 +880,8 @@ function doLogout(){
 function buildNav(){
   const mgr=CUR.role==='manager';
   const tabs=mgr
-    ?[{id:'home',ico:'🏠',l:'الرئيسية'},{id:'approve',ico:'✅',l:'الموافقات',b:true},{id:'report',ico:'📊',l:'التقرير'},{id:'emp',ico:'👥',l:'الموظفون'},{id:'settings',ico:'⚙️',l:'الإعدادات'}]
-    :[{id:'home',ico:'🏠',l:'الرئيسية'},{id:'leave',ico:'📝',l:'طلب إجازة'},{id:'myleaves',ico:'📋',l:'إجازاتي'},{id:'settings',ico:'⚙️',l:'الإعدادات'}];
+    ?[{id:'home',ico:'🏠',l:'الرئيسية'},{id:'approve',ico:'✅',l:'الموافقات',b:true},{id:'report',ico:'📊',l:'التقرير'},{id:'emp',ico:'👥',l:'الموظفون'},{id:'settings',ico:'ℹ️',l:'معلومات'}]
+    :[{id:'home',ico:'🏠',l:'الرئيسية'},{id:'leave',ico:'📝',l:'طلب إجازة'},{id:'myleaves',ico:'📋',l:'إجازاتي'},{id:'settings',ico:'ℹ️',l:'معلومات'}];
   document.getElementById('bnav').innerHTML=tabs.map(t=>
     `<button class="nb${t.id===TAB?' on':''}" id="nb-${t.id}" onclick="sw('${t.id}')">
        <span class="ico">${t.ico}</span>${t.l}
@@ -1337,94 +1337,29 @@ function buildEL(emps){
 }
 
 /* ═══════════════════════════════════════════
-   SETTINGS TAB — إعدادات روابط الـ Webhooks
+   SETTINGS TAB — معلومات النظام
 ═══════════════════════════════════════════ */
 function rSettings(){
   document.getElementById('tab-settings').innerHTML=`
   <div class="card">
-    <div class="stitle"><span class="ico">⚙️</span>إعدادات روابط الـ Webhook</div>
-    <div class="info-hint">🔗 هنا يمكنك تعديل روابط n8n التي يرسل إليها التطبيق عمليات الدخول والخروج والإجازات. الروابط الافتراضية هي روابط الإنتاج (webhook) الجاهزة للعمل الدائم.</div>
-
-    <div class="divr"><span>🔵 البصمة — الدخول والخروج</span></div>
-
-    <div class="fld">
-      <label>📍 رابط تسجيل الدخول (Check-in)</label>
-      <input type="text" id="wh-checkin" dir="ltr" value="${h(WH.checkin)}" placeholder="https://...n8n.cloud/webhook/vet-hr/checkin">
-    </div>
-    <div class="fld">
-      <label>🚪 رابط تسجيل الخروج (Check-out)</label>
-      <input type="text" id="wh-checkout" dir="ltr" value="${h(WH.checkout)}" placeholder="https://...n8n.cloud/webhook/vet-hr/checkout">
-    </div>
-
-    <div class="divr"><span>🟡 الإجازات</span></div>
-
-    <div class="fld">
-      <label>📝 رابط طلب الإجازة (Leave Request)</label>
-      <input type="text" id="wh-leavereq" dir="ltr" value="${h(WH.leaveReq)}" placeholder="https://...n8n.cloud/webhook/vet-hr/leave-request">
-    </div>
-    <div class="fld">
-      <label>✅ رابط قرار الإجازة (Leave Action)</label>
-      <input type="text" id="wh-leaveact" dir="ltr" value="${h(WH.leaveAct)}" placeholder="https://...n8n.cloud/webhook/vet-hr/leave-action">
-    </div>
-
-    <button class="btn btn-primary" onclick="saveWH()">💾 حفظ الروابط</button>
-    <button class="btn btn-navy" style="margin-top:8px" onclick="resetWH()">↩️ استعادة الروابط الافتراضية</button>
-    <button class="btn btn-amber" style="margin-top:8px" onclick="testWH()">🧪 اختبار رابط الدخول</button>
-
-    <div id="wh-test-result" style="margin-top:10px"></div>
-
-    <div class="gps-note" style="margin-top:12px">💡 ملاحظة: الروابط الحالية هي روابط الإنتاج <span dir="ltr">webhook</span> وتعمل بشكل دائم طالما الـ workflow مفعّل (Active) في n8n. للاختبار المؤقت يمكنك استخدام روابط <span dir="ltr">webhook-test</span> التي تعمل بعد الضغط على Execute workflow في n8n.</div>
-  </div>
-
-  <div class="card">
     <div class="stitle"><span class="ico">ℹ️</span>معلومات النظام</div>
-    <div style="font-size:12px;line-height:2.2;color:var(--txt2)">
+    <div style="font-size:13px;line-height:2.4;color:var(--txt2)">
       <div>🏥 <strong>المستشفى:</strong> البيطري العام — كربلاء المقدسة</div>
       <div>📍 <strong>الإحداثيات:</strong> <span dir="ltr">${CFG.hosp.lat}, ${CFG.hosp.lng}</span></div>
       <div>🎯 <strong>نطاق البصمة:</strong> ${CFG.hosp.r} متر</div>
       <div>👤 <strong>المستخدم الحالي:</strong> ${h(CUR.name)} (${CUR.role==='manager'?'مدير':'موظف'})</div>
+      <div>🏢 <strong>القسم:</strong> ${h(CUR.dept)}</div>
     </div>
+  </div>
+
+  <div class="card" style="text-align:center;padding:22px">
+    <div style="font-size:13px;color:var(--txt2);margin-bottom:6px">نظام البصمة الذكية</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Smart Attendance & Inspection System — SAIS</div>
+    <div class="logo-gold-line" style="margin:0 auto 14px"></div>
+    <div style="font-size:12px;color:var(--txt3)">تصميم</div>
+    <div style="font-size:15px;font-weight:900;color:var(--teal);margin-top:4px">د. وسام الجابري</div>
+    <div style="font-size:10px;color:var(--txt3);margin-top:10px">© 2026 — جميع الحقوق محفوظة</div>
   </div>`;
-}
-
-/* حفظ الروابط أثناء الجلسة */
-function saveWH(){
-  const ci=document.getElementById('wh-checkin').value.trim();
-  const co=document.getElementById('wh-checkout').value.trim();
-  const lr=document.getElementById('wh-leavereq').value.trim();
-  const la=document.getElementById('wh-leaveact').value.trim();
-  if(ci) WH.checkin=ci;
-  if(co) WH.checkout=co;
-  if(lr) WH.leaveReq=lr;
-  if(la) WH.leaveAct=la;
-  toast('✅ تم حفظ روابط الـ Webhook','s');
-}
-
-/* استعادة الافتراضي */
-function resetWH(){
-  WH.checkin=WH_DEFAULTS.checkin;
-  WH.checkout=WH_DEFAULTS.checkout;
-  WH.leaveReq=WH_DEFAULTS.leaveReq;
-  WH.leaveAct=WH_DEFAULTS.leaveAct;
-  rSettings();
-  toast('↩️ تمت استعادة الروابط الافتراضية','s');
-}
-
-/* اختبار رابط الدخول */
-async function testWH(){
-  const url=document.getElementById('wh-checkin').value.trim();
-  const box=document.getElementById('wh-test-result');
-  if(!url){ toast('⚠️ أدخل رابطاً أولاً','w'); return; }
-  box.innerHTML='<div class="gps-msg gm-load">⏳ جاري اختبار الاتصال بالرابط...</div>';
-  const res=await post(url,{empId:'E01',empName:'اختبار',dept:'تجريبي',lat:CFG.hosp.lat,lng:CFG.hosp.lng,distance:0,action:'checkin',timeStr:T(),dateStr:D(),telegramId:''});
-  if(res?.ok!==false && !res?.error && !res?.status){
-    box.innerHTML='<div class="gps-msg gm-ok">✅ الرابط يعمل — استجاب الخادم بنجاح</div>';
-    toast('✅ الرابط يعمل','s');
-  } else if(res?.status===404){
-    box.innerHTML='<div class="gps-msg gm-err">❌ الرابط غير موجود (404) — تأكد من تفعيل الـ workflow أو اضغط Execute في n8n لروابط test</div>';
-  } else {
-    box.innerHTML='<div class="gps-msg gm-err">⚠️ لم يستجب الخادم — تأكد أن الـ workflow مفعّل في n8n</div>';
-  }
 }
 
 /* ═══════════════════════════════════════════
