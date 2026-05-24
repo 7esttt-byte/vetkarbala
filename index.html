@@ -544,11 +544,11 @@ a{color:inherit;text-decoration:none}
 
 /* ───────────────────────────────────────────
    WEBHOOK URLs — قابلة للتعديل من صفحة الإعدادات
-   الافتراضي: روابط الاختبار (webhook-test) للدخول والخروج
+   الافتراضي: روابط الإنتاج (webhook) — جاهزة للعمل الدائم
 ─────────────────────────────────────────── */
 const WH_DEFAULTS = {
-  checkin:   'https://wissamaljaberi.app.n8n.cloud/webhook-test/vet-hr/checkin',
-  checkout:  'https://wissamaljaberi.app.n8n.cloud/webhook-test/vet-hr/checkout',
+  checkin:   'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/checkin',
+  checkout:  'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/checkout',
   leaveReq:  'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/leave-request',
   leaveAct:  'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/leave-action',
 };
@@ -1343,17 +1343,17 @@ function rSettings(){
   document.getElementById('tab-settings').innerHTML=`
   <div class="card">
     <div class="stitle"><span class="ico">⚙️</span>إعدادات روابط الـ Webhook</div>
-    <div class="info-hint">🔗 هنا يمكنك تعديل روابط n8n التي يرسل إليها التطبيق عمليات الدخول والخروج والإجازات. الروابط الافتراضية هي روابط الاختبار (webhook-test).</div>
+    <div class="info-hint">🔗 هنا يمكنك تعديل روابط n8n التي يرسل إليها التطبيق عمليات الدخول والخروج والإجازات. الروابط الافتراضية هي روابط الإنتاج (webhook) الجاهزة للعمل الدائم.</div>
 
     <div class="divr"><span>🔵 البصمة — الدخول والخروج</span></div>
 
     <div class="fld">
       <label>📍 رابط تسجيل الدخول (Check-in)</label>
-      <input type="text" id="wh-checkin" dir="ltr" value="${h(WH.checkin)}" placeholder="https://...n8n.cloud/webhook-test/vet-hr/checkin">
+      <input type="text" id="wh-checkin" dir="ltr" value="${h(WH.checkin)}" placeholder="https://...n8n.cloud/webhook/vet-hr/checkin">
     </div>
     <div class="fld">
       <label>🚪 رابط تسجيل الخروج (Check-out)</label>
-      <input type="text" id="wh-checkout" dir="ltr" value="${h(WH.checkout)}" placeholder="https://...n8n.cloud/webhook-test/vet-hr/checkout">
+      <input type="text" id="wh-checkout" dir="ltr" value="${h(WH.checkout)}" placeholder="https://...n8n.cloud/webhook/vet-hr/checkout">
     </div>
 
     <div class="divr"><span>🟡 الإجازات</span></div>
@@ -1373,7 +1373,7 @@ function rSettings(){
 
     <div id="wh-test-result" style="margin-top:10px"></div>
 
-    <div class="gps-note" style="margin-top:12px">💡 ملاحظة: روابط <span dir="ltr">webhook-test</span> تعمل فقط عند الضغط على "Execute workflow" في n8n. للاستخدام الدائم استبدلها بروابط <span dir="ltr">webhook</span> (بدون test) بعد تفعيل الـ workflow.</div>
+    <div class="gps-note" style="margin-top:12px">💡 ملاحظة: الروابط الحالية هي روابط الإنتاج <span dir="ltr">webhook</span> وتعمل بشكل دائم طالما الـ workflow مفعّل (Active) في n8n. للاختبار المؤقت يمكنك استخدام روابط <span dir="ltr">webhook-test</span> التي تعمل بعد الضغط على Execute workflow في n8n.</div>
   </div>
 
   <div class="card">
