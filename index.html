@@ -775,6 +775,36 @@ let LVS = [
 /* ─── STATE ──────────────────────────────── */
 let CUR = null, TAB = 'home', _toastT = null;
 
+/* ─── لوحة التبليغات والمهام اليومية (المرحلة الرابعة) ─── */
+let TASKS = [
+  { id: 'T1', title: 'فحص عينات مختبر الصحة الحيوانية اليومية', dept: 'المختبر', done: false, date: D() },
+  { id: 'T2', title: 'مراجعة وتحديث سجل الصيدلية البيطرية وصرف العلاجات', dept: 'الصيدلية', done: false, date: D() },
+  { id: 'T3', title: 'إعداد وإرسال التقرير الوبائي الأسبوعي إلى الإدارة العامة', dept: 'الوبائيات', done: false, date: D() },
+  { id: 'T4', title: 'تنظيم وتنسيق التغطية الإعلامية لأنشطة المستشفى البيطري', dept: 'الإعلام', done: false, date: D() }
+];
+
+let ANNOUNCEMENT = {
+  text: "📢 تبليغ إداري: يُرجى من جميع أطباء ومنتسبي المستشفى البيطري الالتزام بضوابط الزي الرسمي وحمل الباج التعريفي أثناء الدوام الرسمي، والاستعداد لحملة التفتيش الميداني القادمة.",
+  active: true,
+  date: D()
+};
+
+const BOARD = {
+  load(){
+    try {
+      const ts = localStorage.getItem('sais_tasks');
+      if(ts) TASKS = JSON.parse(ts);
+      const ann = localStorage.getItem('sais_announcement');
+      if(ann) ANNOUNCEMENT = JSON.parse(ann);
+    } catch(e){}
+  },
+  save(){
+    localStorage.setItem('sais_tasks', JSON.stringify(TASKS));
+    localStorage.setItem('sais_announcement', JSON.stringify(ANNOUNCEMENT));
+  }
+};
+BOARD.load();
+
 /* ─── UTILS ──────────────────────────────── */
 const T = () => new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
 const uid = () => 'v'+Math.random().toString(36).substr(2,8);
@@ -1105,6 +1135,20 @@ function rHome(){
     <div class="hero-foot">📅 ${arDate()}</div>
   </div>`;
 
+  /* ── لوحة التبليغات الإدارية الرسمية ── */
+  if (ANNOUNCEMENT && ANNOUNCEMENT.active && ANNOUNCEMENT.text) {
+    html += `
+    <div class="card fade-in" style="border-right: 4px solid var(--gold); background: rgba(240,192,64,.04);">
+      <div style="display:flex;gap:10px;align-items:flex-start">
+        <div style="font-size:20px;animation: pulse2 1.5s ease infinite;">📢</div>
+        <div>
+          <div style="font-weight:900;font-size:12px;color:var(--gold);margin-bottom:4px">تبليغ إداري عاجل</div>
+          <div style="font-size:11.5px;color:var(--txt2);line-height:1.7;">${h(ANNOUNCEMENT.text)}</div>
+        </div>
+      </div>
+    </div>`;
+  }
+
   if(!onLv){
     let gH='';
     if(in_){
@@ -1127,6 +1171,28 @@ function rHome(){
       </div>
       <div class="gps-note">🔒 يشترط التواجد ضمن مجمع المستشفى البيطري في حي التعاون (نطاق 150م)</div>
     </div>`;
+
+    /* ── جدول المهام اليومية للقسم ── */
+    const myTasks = TASKS.filter(t => t.dept === CUR.dept || t.dept === 'المستشفى العام');
+    if (myTasks.length > 0) {
+      const tasksListHTML = myTasks.map(t => `
+        <div class="fade-in" style="display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:rgba(255,255,255,.02);border:1px solid var(--gstroke);border-radius:var(--r);margin-bottom:8px;transition:0.2s; ${t.done ? 'opacity:0.6;background:rgba(0,201,167,.03);border-color:rgba(0,201,167,.2);' : ''}">
+          <div style="display:flex;align-items:center;gap:10px;flex:1">
+            <input type="checkbox" ${t.done ? 'checked' : ''} onchange="toggleTaskDone('${t.id}')"
+              style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer;border-radius:4px">
+            <span style="font-size:12px;color:${t.done ? 'var(--teal)' : 'var(--txt2)'};text-decoration:${t.done ? 'line-through' : 'none'};line-height:1.5;">${h(t.title)}</span>
+          </div>
+          ${t.done ? '<span style="font-size:11px;color:var(--green);font-weight:700">🟢 مكتمل</span>' : '<span style="font-size:11px;color:var(--txt3)">⏳ قيد العمل</span>'}
+        </div>
+      `).join('');
+
+      html += `
+      <div class="card">
+        <div class="stitle"><span class="ico">📋</span>مهام قسمك اليومية (${CUR.dept})</div>
+        <div style="font-size:11px;color:var(--txt3);margin-bottom:12px">يرجى متابعة وإنجاز المهام المسندة لقسمك لهذا اليوم.</div>
+        ${tasksListHTML}
+      </div>`;
+    }
   }
 
   if(onLv&&lvs.length){
@@ -1708,6 +1774,66 @@ function rSettings(){
     <button onclick="detectMyIP()" style="margin-top:8px;width:100%;padding:9px;border:1px solid var(--gstroke);border-radius:var(--r);background:transparent;color:var(--teal);font-weight:700;font-size:12px;cursor:pointer">🔍 اكتشف IP شبكتي الحالية وأضفها</button>
   </div>` : '';
 
+  /* قسم إدارة المهام والتبليغات — للمدير فقط */
+  let boardSection = '';
+  if (CUR.role === 'manager') {
+    const allTasksHTML = TASKS.map(t => `
+      <div class="fade-in" style="background:rgba(255,255,255,.02);border:1px solid var(--gstroke);border-radius:var(--r);padding:10px 12px;margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:12.5px;font-weight:700;color:var(--txt)">${h(t.title)}</div>
+            <div style="font-size:10.5px;color:var(--txt3);margin-top:4px">القسم: <strong style="color:var(--teal)">${h(t.dept)}</strong></div>
+          </div>
+          <button onclick="deleteTask('${t.id}')" style="background:rgba(255,79,106,.15);border:none;border-radius:8px;color:var(--red);padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer">🗑 حذف</button>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding-top:6px;border-top:1px dashed rgba(255,255,255,.05)">
+          <span style="font-size:11px;color:var(--txt3)">الحالة:</span>
+          ${t.done
+            ? '<span style="color:var(--green);font-size:11px;font-weight:700">🟢 مكتملة</span>'
+            : '<span style="color:var(--amber);font-size:11px;font-weight:700">⏳ قيد الإنجاز</span>'}
+        </div>
+      </div>`).join('');
+
+    boardSection = `
+    <div class="card">
+      <div class="stitle"><span class="ico">📢</span>التبليغ الإداري النشط</div>
+      <div class="fld"><label>نص التبليغ الحالي</label>
+        <textarea id="mgr-ann-inp" placeholder="اكتب تبليغاً إدارياً جديداً للموظفين..." style="width:100%;min-height:70px;padding:9px 12px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);color:var(--txt);font-size:12.5px">${h(ANNOUNCEMENT?.text || '')}</textarea>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="updateAnnouncement()" style="flex:1;padding:10px;border:none;border-radius:var(--r);background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;font-weight:900;font-size:12.5px;cursor:pointer">💾 تحديث وحفظ التبليغ</button>
+        <button onclick="toggleAnnouncementActive()" style="padding:10px 14px;border:1px solid var(--gstroke);border-radius:var(--r);background:transparent;color:${ANNOUNCEMENT?.active ? 'var(--red)' : 'var(--green)'};font-weight:900;font-size:12.5px;cursor:pointer">
+          ${ANNOUNCEMENT?.active ? '🔕 إخفاء' : '🔔 تفعيل'}
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="stitle"><span class="ico">📋</span>إدارة وتعيين المهام اليومية للأقسام</div>
+      <div class="fld"><label>مهمة جديدة</label>
+        <input id="mgr-task-title" placeholder="أدخل تفاصيل المهمة اليومية المطلوبة..."
+          style="width:100%;padding:10px 12px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);color:var(--txt);font-size:13px;margin-bottom:8px">
+        <label>تحديد القسم المسؤول</label>
+        <select id="mgr-task-dept" style="width:100%;padding:10px 12px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);color:var(--txt);font-size:13px">
+          <option value="المستشفى العام">🏥 جميع المنتسبين</option>
+          <option value="الوبائيات">🧬 قسم الوبائيات</option>
+          <option value="المختبر">🔬 قسم المختبر المركزي</option>
+          <option value="الصيدلية">💊 قسم الصيدلية البيطرية</option>
+          <option value="الإعلام">📢 قسم الإعلام والاتصال</option>
+          <option value="التقني">⚙️ القسم التقني والفني</option>
+          <option value="المجازر">🥩 قسم الرقابة والمجازر</option>
+          <option value="الدواجن">🐓 قسم الدواجن والأسماك</option>
+          <option value="التلقيح الاصطناعي">🐄 قسم التلقيح والنسليات</option>
+          <option value="الإدارة العامة">🏢 الإدارة العامة</option>
+        </select>
+      </div>
+      <button onclick="addNewTask()" style="width:100%;padding:11px;border:none;border-radius:var(--r);background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;font-weight:900;font-size:13px;cursor:pointer">+ تعيين وإرسال المهمة للقسم</button>
+
+      <div class="divr" style="margin:20px 0 12px"><span>قائمة المهام اليومية الموزعة</span></div>
+      ${allTasksHTML ? allTasksHTML : '<div style="font-size:12px;color:var(--txt3);text-align:center;padding:10px">لا توجد مهام موزعة اليوم</div>'}
+    </div>`;
+  }
+
   document.getElementById('tab-settings').innerHTML=`
   <div class="card">
     <div class="stitle"><span class="ico">ℹ️</span>معلومات المستخدم</div>
@@ -1726,14 +1852,76 @@ function rSettings(){
 
   ${wifiSection}
 
+  ${boardSection}
+
   <div class="card" style="text-align:center;padding:22px">
     <div style="font-size:13px;color:var(--txt2);margin-bottom:6px">نظام البصمة الذكية</div>
-    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Smart Attendance & Inspection System — SAIS v2.2</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Smart Attendance & Inspection System — SAIS v2.3</div>
     <div class="logo-gold-line" style="margin:0 auto 14px"></div>
     <div style="font-size:12px;color:var(--txt3)">تصميم</div>
     <div style="font-size:15px;font-weight:900;color:var(--teal);margin-top:4px">د. وسام الجابري</div>
     <div style="font-size:10px;color:var(--txt3);margin-top:10px">© 2026 — جميع الحقوق محفوظة</div>
   </div>`;
+}
+
+/* ── دوال لوحة المهام والتبليغات (المرحلة الرابعة) ── */
+function toggleTaskDone(id){
+  const t = TASKS.find(x => x.id === id);
+  if(t) {
+    t.done = !t.done;
+    BOARD.save();
+    playChime(t.done);
+    toast(t.done ? '✅ تم إنجاز المهمة بنجاح' : '⏳ تم إرجاع المهمة قيد التنفيذ', 's');
+    rHome();
+  }
+}
+
+function updateAnnouncement(){
+  const val = document.getElementById('mgr-ann-inp')?.value.trim();
+  if(!val) { toast('⚠️ أدخل نص التبليغ أولاً', 'w'); return; }
+  ANNOUNCEMENT.text = val;
+  ANNOUNCEMENT.active = true;
+  BOARD.save();
+  toast('📢 تم تحديث ونشر التبليغ الإداري بنجاح', 's');
+  rSettings();
+}
+
+function toggleAnnouncementActive(){
+  ANNOUNCEMENT.active = !ANNOUNCEMENT.active;
+  BOARD.save();
+  toast(ANNOUNCEMENT.active ? '🔔 تم تفعيل ونشر التبليغ' : '🔕 تم إخفاء التبليغ من لوحة الموظفين', 's');
+  rSettings();
+}
+
+function addNewTask(){
+  const title = document.getElementById('mgr-task-title')?.value.trim();
+  const dept = document.getElementById('mgr-task-dept')?.value;
+  if(!title) { toast('⚠️ أدخل تفاصيل المهمة المطلوبة', 'w'); return; }
+  
+  const newTask = {
+    id: uid(),
+    title: title,
+    dept: dept,
+    done: false,
+    date: D()
+  };
+  
+  TASKS.push(newTask);
+  BOARD.save();
+  toast('📋 تم تعيين ونشر المهمة للقسم المسؤول', 's');
+  
+  // reset input
+  const inp = document.getElementById('mgr-task-title');
+  if(inp) inp.value = '';
+  
+  rSettings();
+}
+
+function deleteTask(id){
+  TASKS = TASKS.filter(x => x.id !== id);
+  BOARD.save();
+  toast('🗑 تم حذف وإلغاء المهمة بنجاح', 's');
+  rSettings();
 }
 
 /* ── دوال إدارة IP المعتمدة ── */
