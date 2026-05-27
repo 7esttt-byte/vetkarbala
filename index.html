@@ -1666,16 +1666,70 @@ function rReport(){
     </tr>`;
   }).join('');
 
+  /* ── مخطط دائري SVG تفاعلي لنشاط الحضور ── */
+  const attRate = pc(pres.length);
+  const circ = 2 * Math.PI * 30; // 188.49
+  const offset = circ - (attRate / 100) * circ;
+  const svgDonut = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:20px;padding:15px;background:rgba(255,255,255,.01);border:1px solid var(--gstroke);border-radius:var(--r);margin-bottom:12px">
+      <svg width="80" height="80" viewBox="0 0 80 80" style="transform: rotate(-90deg)">
+        <circle cx="40" cy="40" r="30" fill="transparent" stroke="rgba(255,255,255,.05)" stroke-width="8"></circle>
+        <circle cx="40" cy="40" r="30" fill="transparent" stroke="var(--teal)" stroke-width="8"
+          stroke-dasharray="${circ}" stroke-dashoffset="${offset}" stroke-linecap="round" style="transition: stroke-dashoffset 0.5s ease-in-out"></circle>
+      </svg>
+      <div>
+        <div style="font-size:24px;font-weight:900;color:var(--teal)">${attRate}%</div>
+        <div style="font-size:12px;color:var(--txt2)">نسبة الحضور اليومي للكادر</div>
+        <div style="font-size:10px;color:var(--txt3);margin-top:2px">تم البصم بنجاح من إجمالي الملاك</div>
+      </div>
+    </div>
+  `;
+
+  /* ── نسب حضور الأقسام ── */
+  const depts = [...new Set(emps.map(e => e.dept))];
+  const deptStatsHTML = depts.map(dept => {
+    const deptEmps = emps.filter(e => e.dept === dept);
+    const deptPres = deptEmps.filter(e => dA.find(a => a.empId === e.id && a.checkIn));
+    const rate = deptEmps.length ? Math.round((deptPres.length / deptEmps.length) * 100) : 0;
+    return `
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--txt2);margin-bottom:4px">
+          <span>${dept}</span>
+          <span style="font-weight:700;color:var(--teal)">${rate}% (${deptPres.length}/${deptEmps.length})</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,.04);border-radius:10px;overflow:hidden">
+          <div style="height:100%;width:${rate}%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:10px"></div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const deptStatsCard = `
+    <div class="card">
+      <div class="stitle"><span class="ico">🏢</span>نسب الحضور حسب الأقسام</div>
+      <div style="margin-top:10px">${deptStatsHTML}</div>
+    </div>
+  `;
+
   document.getElementById('tab-report').innerHTML=`
   <div class="card">
     <div class="stitle"><span class="ico">📊</span>التقرير اليومي</div>
     <div class="fld"><label>📅 اختر التاريخ</label>
       <input type="date" id="rep-d" value="${dv}" onchange="rReport()">
     </div>
+    <button onclick="printOfficialReport('${dv}')" class="btn" style="margin-top:12px;background:linear-gradient(135deg,var(--teal),var(--teal2));box-shadow:0 4px 14px rgba(0,201,167,.25)">
+      📤 تصدير الكشف الرسمي المعتمد (PDF/طباعة)
+    </button>
   </div>
+
+  ${svgDonut}
+
   <div class="sg2">${stH}</div>
+
+  ${deptStatsCard}
+
   <div class="card">
-    <div class="stitle"><span class="ico">📋</span>تفاصيل الحضور</div>
+    <div class="stitle"><span class="ico">📋</span>تفاصيل حضور الكادر</div>
     <div style="overflow-x:auto">
       <table class="rt">
         <thead><tr><th>الموظف</th><th>القسم</th><th>الدخول</th><th>الخروج</th><th>ساعات</th><th>الحالة</th></tr></thead>
@@ -1683,6 +1737,7 @@ function rReport(){
       </table>
     </div>
   </div>
+
   <div class="card" style="font-size:12px;line-height:2.3;color:var(--txt2)">
     <div class="stitle"><span class="ico">📄</span>ملخص اليوم</div>
     <div>📅 <strong>التاريخ:</strong> ${dv}</div>
@@ -1693,6 +1748,189 @@ function rReport(){
     <div>❌ <strong>الغائبون:</strong> ${abs.length}</div>
     ${pres.length?`<div>🕐 <strong>أبكر دخول:</strong> ${[...pres].sort((a,b)=>(a.checkIn||'').localeCompare(b.checkIn||''))[0]?.checkIn||'─'}</div>`:''}
   </div>`;
+}
+
+/* ─── OFFICIAL PRINT REPORT (Phase 5) ─── */
+function printOfficialReport(dateStr) {
+  const emps = USERS.filter(u => u.role === 'employee');
+  const d = dateStr || D();
+  const dA = ATT.filter(x => x.date === d);
+  const dL = LVS.filter(x => x.s <= d && x.e >= d && x.st === 'approved');
+  
+  let rowsHTML = emps.map((e, index) => {
+    const a = dA.find(x => x.empId === e.id);
+    const l = dL.find(x => x.empId === e.id);
+    const st = a?.st || (l ? (l.type === 'regular' ? 'leave' : 'timed-leave') : 'absent');
+    
+    let stText = 'غائب';
+    if(st === 'present') stText = 'حاضر';
+    else if(st === 'leave') stText = 'إجازة اعتيادية';
+    else if(st === 'timed-leave') stText = 'إجازة زمنية';
+    
+    return `
+      <tr>
+        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">${index + 1}</td>
+        <td style="border: 1px solid #ddd; padding: 10px; text-align: right; font-weight: bold;">${h(e.name)}</td>
+        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">${h(e.dept)}</td>
+        <td style="border: 1px solid #ddd; padding: 10px; text-align: center; direction: ltr;">${a?.checkIn || '─'}</td>
+        <td style="border: 1px solid #ddd; padding: 10px; text-align: center; direction: ltr;">${a?.checkOut || '─'}</td>
+        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;">${wh(a?.checkIn, a?.checkOut) || '─'}</td>
+        <td style="border: 1px solid #ddd; padding: 10px; text-align: center; font-weight: bold; color: ${st==='present'?'#00875a':st==='absent'?'#d32f2f':'#e65100'}">${stText}</td>
+        <td style="border: 1px solid #ddd; padding: 10px; text-align: center;"></td>
+      </tr>
+    `;
+  }).join('');
+  
+  const printWindow = window.open('', '_blank');
+  printWindow.document.write(`
+    <html dir="rtl" lang="ar">
+    <head>
+      <meta charset="UTF-8">
+      <title>تقرير الحضور الرسمي - ${d}</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cairo:wght@400;700;900&display=swap');
+        body {
+          font-family: 'Cairo', sans-serif;
+          margin: 40px;
+          color: #111;
+          background-color: #fff;
+        }
+        .header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          border-bottom: 2px double #00c9a7;
+          padding-bottom: 15px;
+          margin-bottom: 30px;
+        }
+        .header-right {
+          text-align: right;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+        .header-center {
+          text-align: center;
+        }
+        .header-left {
+          text-align: left;
+          font-size: 13px;
+          line-height: 1.6;
+        }
+        .doc-title {
+          font-size: 20px;
+          font-weight: 900;
+          color: #0d2240;
+          margin: 20px 0;
+          text-align: center;
+        }
+        .meta-info {
+          display: flex;
+          justify-content: space-between;
+          background: #f8f9fa;
+          border: 1px solid #e9ecef;
+          border-radius: 8px;
+          padding: 12px 20px;
+          margin-bottom: 25px;
+          font-size: 13px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-bottom: 40px;
+          font-size: 12px;
+        }
+        th {
+          background-color: #0f2744;
+          color: #fff;
+          font-weight: 700;
+          border: 1px solid #ddd;
+          padding: 12px 10px;
+        }
+        .signatures {
+          margin-top: 60px;
+          display: flex;
+          justify-content: space-between;
+          padding: 0 40px;
+          font-size: 14px;
+        }
+        .signature-block {
+          text-align: center;
+          width: 250px;
+        }
+        .signature-line {
+          margin-top: 60px;
+          border-top: 1.5px solid #333;
+          padding-top: 8px;
+          font-weight: 700;
+        }
+        @media print {
+          body { margin: 20px; }
+          button { display: none; }
+        }
+      </style>
+    </head>
+    <body>
+      <div style="text-align: left; margin-bottom: 10px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #00c9a7; color: #fff; border: none; border-radius: 5px; font-family: 'Cairo', sans-serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,201,167,0.3);">🖨 طباعة أو حفظ PDF</button>
+      </div>
+      
+      <div class="header">
+        <div class="header-right">
+          <strong>جمهورية العراق</strong><br>
+          <strong>وزارة الزراعة</strong><br>
+          <strong>دائرة البيطرة</strong>
+        </div>
+        <div class="header-center">
+          <div style="font-size: 26px;">🏥</div>
+          <div style="font-size: 16px; font-weight: 900; color: #00c9a7; margin-top: 5px;">المستشفى البيطري العام في كربلاء المقدسة</div>
+        </div>
+        <div class="header-left">
+          <strong>التاريخ:</strong> ${d}<br>
+          <strong>المستند:</strong> سجل حضور يومي<br>
+          <strong>الحالة:</strong> معتمد رسميًا
+        </div>
+      </div>
+      
+      <div class="doc-title">كشف حضور وانصراف الكادر والمنتسبين</div>
+      
+      <div class="meta-info">
+        <div>👥 <strong>إجمالي الملاك:</strong> ${emps.length} موظف</div>
+        <div>🟢 <strong>نسبة الحضور:</strong> ${Math.round((dA.filter(x=>x.checkIn).length / emps.length) * 100)}%</div>
+        <div>📅 <strong>تاريخ الكشف:</strong> ${new Date(d).toLocaleDateString('ar-IQ', {weekday:'long', year:'numeric', month:'long', day:'numeric'})}</div>
+      </div>
+      
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 5%;">ت</th>
+            <th style="width: 25%;">اسم الموظف الثلاثي</th>
+            <th style="width: 15%;">القسم / الشعبة</th>
+            <th style="width: 10%;">الدخول</th>
+            <th style="width: 10%;">الخروج</th>
+            <th style="width: 12%;">ساعات العمل</th>
+            <th style="width: 13%;">الحالة اليومية</th>
+            <th style="width: 10%;">التوقيع</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHTML}
+        </tbody>
+      </table>
+      
+      <div class="signatures">
+        <div class="signature-block">
+          <div>مسؤول شعبة الإدارة</div>
+          <div class="signature-line">سجاد علي حسن</div>
+        </div>
+        <div class="signature-block">
+          <div>مدير المستشفى البيطري العام</div>
+          <div class="signature-line">د. وسام الجابري</div>
+        </div>
+      </div>
+    </body>
+    </html>
+  `);
+  printWindow.document.close();
 }
 
 /* ═══════════════════════════════════════════
