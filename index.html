@@ -585,6 +585,50 @@ function nearestLoc(lat, lng){
   return { loc: best, dist: bestDist };
 }
 
+/* ═════════════════════════════════════════════
+   المرحلة الثانية: تحقّق شبكة Wi-Fi المعتمدة
+   (NETWORK / Wi-Fi VERIFICATION)
+═════════════════════════════════════════════ */
+const WIFI = {
+  STORE_KEY: 'sais_trusted_ips',
+
+  /* قراءة قائمة الـ IP المعتمدة من الذاكرة */
+  get trustedIPs(){
+    try{ return JSON.parse(localStorage.getItem(this.STORE_KEY) || '[]'); }
+    catch{ return []; }
+  },
+
+  /* حفظ قائمة الـ IP المعتمدة */
+  save(ips){ localStorage.setItem(this.STORE_KEY, JSON.stringify(ips)); },
+
+  /* إضافة IP جديد */
+  add(ip){
+    const ips = this.trustedIPs;
+    if(!ips.includes(ip)){ ips.push(ip); this.save(ips); return true; }
+    return false;
+  },
+
+  /* حذف IP */
+  remove(ip){
+    this.save(this.trustedIPs.filter(x => x !== ip));
+  },
+
+  /* التحقّق من IP */
+  check(ip){ return this.trustedIPs.includes(ip); }
+};
+
+/* جلب الـ IP العام للجهاز عبر خدمة خارجية (timeout قصير 4ث) */
+async function fetchPublicIP(){
+  try{
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 4000);
+    const r = await fetch('https://api.ipify.org?format=json', { signal: ctrl.signal });
+    clearTimeout(tid);
+    const data = await r.json();
+    return data.ip || null;
+  }catch{ return null; }
+}
+
 /* ─── LOCAL FALLBACK DATA ────────────────── */
 const LOCAL_USERS = [
   {id:'MGR',name:'د. وسام الجابري',    username:'manager',password:'admin123',role:'manager', dept:'الإدارة العامة',    tg:'6933149494'},
@@ -1043,16 +1087,30 @@ function doCI(){
     if(ex) ATT=ATT.map(a=>a.empId===CUR.id&&a.date===d?{...a,checkIn:t,st:'present',dist,branch:loc.name}:a);
     else   ATT.push({id:uid(),empId:CUR.id,date:d,checkIn:t,checkOut:null,st:'present',dist,branch:loc.name});
 
-    /* ── POST to WH.checkin ── */
-    const payload={
-      empId:CUR.id, empName:CUR.name, dept:CUR.dept,
-      lat:pos.coords.latitude, lng:pos.coords.longitude,
-      distance:dist, branch:loc.name, branchId:loc.id,
-      action:'checkin', timeStr:t, dateStr:d, telegramId:CUR.tg||''
-    };
-    const res=await post(WH.checkin,payload);
+    /* ── المرحلة الثانية: جلب IP والتحقّق من الشبكة بالتوازي مع الإرسال ── */
+    const [res, publicIP] = await Promise.all([
+      post(WH.checkin, {
+        empId:CUR.id, empName:CUR.name, dept:CUR.dept,
+        lat:pos.coords.latitude, lng:pos.coords.longitude,
+        distance:dist, branch:loc.name, branchId:loc.id,
+        action:'checkin', timeStr:t, dateStr:d, telegramId:CUR.tg||''
+      }),
+      fetchPublicIP()
+    ]);
+
+    /* بادج حالة الشبكة */
+    const hasTrusted = WIFI.trustedIPs.length > 0;
+    const netVerified = publicIP && WIFI.check(publicIP);
+    const netBadge = !publicIP
+      ? `<span style="color:var(--txt3);font-size:11px">📶 لم يتم تحديد IP</span>`
+      : netVerified
+        ? `<span style="color:var(--green);font-size:11px">🟢 شبكة المستشفى المعتمدة <small dir="ltr">(${publicIP})</small></span>`
+        : hasTrusted
+          ? `<span style="color:var(--amber);font-size:11px">🟡 شبكة خارجية <small dir="ltr">(${publicIP})</small></span>`
+          : `<span style="color:var(--txt3);font-size:11px">🟤 شبكة غير مضبوطة — تواصل مع المدير <small dir="ltr">(${publicIP||'-'})</small></span>`;
+
     showGPS(
-      `✅ تسجيل دخول ناجح — ${t}<br>📍 الفرع: <strong>${loc.name}</strong><br>المسافة: ${dist} م`,
+      `✅ تسجيل دخول ناجح — ${t}<br>📍 الفرع: <strong>${loc.name}</strong> · ${dist} م<br>${netBadge}`,
       'gm-ok'
     );
     toast(`✅ دخول مسجَّل — ${t}`,'s');
@@ -1386,6 +1444,30 @@ function rSettings(){
       <div style="font-size:11px;color:var(--txt2);margin-top:3px">🎯 نطاق البصمة: <strong>${loc.r} متر</strong></div>
     </div>`).join('');
 
+  /* بناء قائمة IP المعتمدة */
+  const trustedIPs = WIFI.trustedIPs;
+  const ipsHTML = trustedIPs.length === 0
+    ? `<div style="font-size:12px;color:var(--txt3);text-align:center;padding:10px">لا توجد عناوين IP مضافة بعد</div>`
+    : trustedIPs.map(ip=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;background:rgba(0,229,160,.07);border:1px solid rgba(0,229,160,.2);border-radius:var(--r);padding:8px 12px;margin-bottom:6px">
+        <span style="font-size:13px;font-weight:700;color:var(--green);direction:ltr">${ip}</span>
+        <button onclick="removeWifiIP('${ip}')" style="background:rgba(255,79,106,.15);border:none;border-radius:8px;color:var(--red);padding:4px 10px;font-size:12px;font-weight:700;cursor:pointer">🗑 حذف</button>
+      </div>`).join('');
+
+  /* قسم إعدادات Wi-Fi — للمدير فقط */
+  const wifiSection = CUR.role === 'manager' ? `
+  <div class="card">
+    <div class="stitle"><span class="ico">📶</span>عناوين IP المعتمدة (شبكة المستشفى)</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:10px">أضف عنوان الـ IP العام لشبكة كل فرع. سيظهر للموظف حالة الشبكة عند البصم (🟢 معتمدة / 🟡 خارجية).</div>
+    ${ipsHTML}
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <input id="wifi-ip-inp" placeholder="أدخل عنوان IP عام..." dir="ltr"
+        style="flex:1;padding:9px 12px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);color:var(--txt);font-size:13px">
+      <button onclick="addWifiIP()" style="padding:9px 16px;border:none;border-radius:var(--r);background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff;font-weight:900;font-size:13px;cursor:pointer">+ إضافة</button>
+    </div>
+    <button onclick="detectMyIP()" style="margin-top:8px;width:100%;padding:9px;border:1px solid var(--gstroke);border-radius:var(--r);background:transparent;color:var(--teal);font-weight:700;font-size:12px;cursor:pointer">🔍 اكتشف IP شبكتي الحالية وأضفها</button>
+  </div>` : '';
+
   document.getElementById('tab-settings').innerHTML=`
   <div class="card">
     <div class="stitle"><span class="ico">ℹ️</span>معلومات المستخدم</div>
@@ -1402,14 +1484,42 @@ function rSettings(){
     ${locsHTML}
   </div>
 
+  ${wifiSection}
+
   <div class="card" style="text-align:center;padding:22px">
     <div style="font-size:13px;color:var(--txt2);margin-bottom:6px">نظام البصمة الذكية</div>
-    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Smart Attendance & Inspection System — SAIS v2.1</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Smart Attendance & Inspection System — SAIS v2.2</div>
     <div class="logo-gold-line" style="margin:0 auto 14px"></div>
     <div style="font-size:12px;color:var(--txt3)">تصميم</div>
     <div style="font-size:15px;font-weight:900;color:var(--teal);margin-top:4px">د. وسام الجابري</div>
     <div style="font-size:10px;color:var(--txt3);margin-top:10px">© 2026 — جميع الحقوق محفوظة</div>
   </div>`;
+}
+
+/* ── دوال إدارة IP المعتمدة ── */
+async function addWifiIP(){
+  const inp = document.getElementById('wifi-ip-inp');
+  const ip = inp?.value.trim();
+  if(!ip){ toast('⚠️ أدخل عنوان IP صحيح','w'); return; }
+  /* تحقّق بسيط من صيغة IPv4 */
+  if(!/^\d{1,3}(\.\d{1,3}){3}$/.test(ip)){ toast('❌ صيغة IP غير صحيحة','e'); return; }
+  if(WIFI.add(ip)){
+    toast(`✅ تمت إضافة ${ip}`,'s');
+    rSettings();
+  } else { toast('⚠️ هذا الـ IP مضاف مسبقاً','w'); }
+}
+function removeWifiIP(ip){
+  WIFI.remove(ip);
+  toast(`🗑 تم حذف ${ip}`,'s');
+  rSettings();
+}
+async function detectMyIP(){
+  toast('⏳ جاري اكتشاف IP شبكتك...','w');
+  const ip = await fetchPublicIP();
+  if(!ip){ toast('❌ لم يتم اكتشاف IP — تحقّق من الاتصال','e'); return; }
+  const inp = document.getElementById('wifi-ip-inp');
+  if(inp) inp.value = ip;
+  toast(`🟢 تم اكتشاف IP: ${ip} — اضغط + إضافة لحفظه`,'s');
 }
 
 /* ═══════════════════════════════════════════
