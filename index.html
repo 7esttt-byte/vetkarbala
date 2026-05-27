@@ -565,10 +565,25 @@ const DATA = {
 
 /* ─── CONFIG ─────────────────────────────── */
 const CFG = {
-  hosp: { lat:32.58591, lng:44.02225, r:300 },
+  /* ── المواقع المعتمدة لعيادات وفروع المستشفى البيطري في كربلاء ── */
+  locations: [
+    { id:'LOC1', name:'المستشفى البيطري الرئيسي (حي البلديات)',       lat:32.58591, lng:44.02225, r:300  },
+    { id:'LOC2', name:'المستوصف البيطري النموذجي (حي الحسين)',          lat:32.61054, lng:44.01524, r:200  },
+    { id:'LOC3', name:'مختبر الصحة الحيوانية المركزي (حي المعلمين)',   lat:32.59542, lng:44.03512, r:150  },
+  ],
   sheetId: '1omOclvKpIY_1AlNyaQXaUBMjXpZPbdDiBOzQM2TAM6s',
   mgr_tg:  '6933149494',
 };
+
+/* ── دالة مساعدة: إيجاد أقرب موقع للموظف وإرجاع {loc, dist} ── */
+function nearestLoc(lat, lng){
+  let best = null, bestDist = Infinity;
+  CFG.locations.forEach(loc => {
+    const d = hav(lat, lng, loc.lat, loc.lng);
+    if(d < bestDist){ bestDist = d; best = loc; }
+  });
+  return { loc: best, dist: bestDist };
+}
 
 /* ─── LOCAL FALLBACK DATA ────────────────── */
 const LOCAL_USERS = [
@@ -993,7 +1008,7 @@ function showGPS(msg,cls){
   if(el) el.innerHTML=`<div class="gps-msg ${cls}">${msg}</div>`;
 }
 
-/* ── CHECK-IN → WH.checkin ── */
+/* ── CHECK-IN → WH.checkin (Multi-Site) ── */
 function doCI(){
   const btn=document.querySelector('#gps-btns .btn-checkin');
   if(btn){btn.disabled=true;btn.textContent='⏳ جاري تحديد الموقع...';}
@@ -1005,27 +1020,41 @@ function doCI(){
     return;
   }
   navigator.geolocation.getCurrentPosition(async pos=>{
-    const dist=hav(pos.coords.latitude,pos.coords.longitude,CFG.hosp.lat,CFG.hosp.lng);
-    if(dist>CFG.hosp.r){
-      showGPS(`❌ خارج نطاق المستشفى — المسافة ${dist} متر (الحد: ${CFG.hosp.r} م)`,'gm-err');
-      toast(`❌ خارج النطاق — ${dist} م`,'e');
+    /* ── إيجاد أقرب فرع ── */
+    const { loc, dist } = nearestLoc(pos.coords.latitude, pos.coords.longitude);
+
+    if(dist > loc.r){
+      /* بناء رسالة تعرض المسافة لكل الفروع المعتمدة */
+      const allDists = CFG.locations.map(l=>
+        `📌 ${l.name}: ${hav(pos.coords.latitude,pos.coords.longitude,l.lat,l.lng)} م`
+      ).join('<br>');
+      showGPS(
+        `❌ خارج نطاق جميع الفروع المعتمدة<br><small style="opacity:.75">${allDists}</small>`,
+        'gm-err'
+      );
+      toast(`❌ خارج النطاق — أقرب فرع: ${dist} م`,'e');
       if(btn){btn.disabled=false;btn.textContent='📍 تسجيل الدخول الآن';}
       return;
     }
+
     const t=T(), d=D();
-    /* Update local state */
+    /* تحديث الحالة المحلية مع اسم الفرع */
     const ex=ATT.find(a=>a.empId===CUR.id&&a.date===d);
-    if(ex) ATT=ATT.map(a=>a.empId===CUR.id&&a.date===d?{...a,checkIn:t,st:'present',dist}:a);
-    else   ATT.push({id:uid(),empId:CUR.id,date:d,checkIn:t,checkOut:null,st:'present',dist});
+    if(ex) ATT=ATT.map(a=>a.empId===CUR.id&&a.date===d?{...a,checkIn:t,st:'present',dist,branch:loc.name}:a);
+    else   ATT.push({id:uid(),empId:CUR.id,date:d,checkIn:t,checkOut:null,st:'present',dist,branch:loc.name});
+
     /* ── POST to WH.checkin ── */
     const payload={
       empId:CUR.id, empName:CUR.name, dept:CUR.dept,
       lat:pos.coords.latitude, lng:pos.coords.longitude,
-      distance:dist, action:'checkin',
-      timeStr:t, dateStr:d, telegramId:CUR.tg||''
+      distance:dist, branch:loc.name, branchId:loc.id,
+      action:'checkin', timeStr:t, dateStr:d, telegramId:CUR.tg||''
     };
     const res=await post(WH.checkin,payload);
-    showGPS(`✅ تسجيل دخول ناجح — ${t} · ${dist} م من المستشفى`,'gm-ok');
+    showGPS(
+      `✅ تسجيل دخول ناجح — ${t}<br>📍 الفرع: <strong>${loc.name}</strong><br>المسافة: ${dist} م`,
+      'gm-ok'
+    );
     toast(`✅ دخول مسجَّل — ${t}`,'s');
     if(!res?.ok) toast('⚠️ أضف Google Sheets credential في n8n','w');
     rHome();
@@ -1036,18 +1065,25 @@ function doCI(){
   },{enableHighAccuracy:true,timeout:12000});
 }
 
-/* ── CHECK-OUT → WH.checkout ── */
+/* ── CHECK-OUT → WH.checkout (Multi-Site) ── */
 async function doCO(){
   const t=T(), d=D();
+  /* استرجاع الفرع الذي تم البصم فيه عند الدخول */
+  const rec = ATT.find(a=>a.empId===CUR.id&&a.date===d);
+  const branch = rec?.branch || CFG.locations[0].name;
+  const branchLoc = CFG.locations.find(l=>l.name===branch) || CFG.locations[0];
+
   ATT=ATT.map(a=>a.empId===CUR.id&&a.date===d?{...a,checkOut:t,st:'done'}:a);
+
   /* POST to WH.checkout */
   const payload={
     empId:CUR.id, empName:CUR.name, dept:CUR.dept,
-    lat:CFG.hosp.lat, lng:CFG.hosp.lng,
+    lat:branchLoc.lat, lng:branchLoc.lng,
+    branch:branchLoc.name, branchId:branchLoc.id,
     action:'checkout', timeStr:t, dateStr:d, telegramId:CUR.tg||''
   };
   const res=await post(WH.checkout,payload);
-  toast(`✅ خروج مسجَّل — ${t}`,'s');
+  toast(`✅ خروج مسجَّل — ${t} · ${branchLoc.name}`,'s');
   if(!res?.ok) toast('⚠️ أضف Google Sheets credential في n8n','w');
   rHome();
 }
@@ -1340,21 +1376,35 @@ function buildEL(emps){
    SETTINGS TAB — معلومات النظام
 ═══════════════════════════════════════════ */
 function rSettings(){
+  /* بناء قائمة الفروع المعتمدة ديناميكياً */
+  const locsHTML = CFG.locations.map((loc,i)=>`
+    <div style="background:rgba(0,201,167,.06);border:1px solid rgba(0,201,167,.2);border-radius:var(--r);padding:10px 12px;margin-bottom:8px">
+      <div style="font-weight:700;font-size:13px;color:var(--teal)">📍 ${loc.name}</div>
+      <div style="font-size:11px;color:var(--txt3);margin-top:4px;direction:ltr">
+        Lat: ${loc.lat} | Lng: ${loc.lng}
+      </div>
+      <div style="font-size:11px;color:var(--txt2);margin-top:3px">🎯 نطاق البصمة: <strong>${loc.r} متر</strong></div>
+    </div>`).join('');
+
   document.getElementById('tab-settings').innerHTML=`
   <div class="card">
-    <div class="stitle"><span class="ico">ℹ️</span>معلومات النظام</div>
+    <div class="stitle"><span class="ico">ℹ️</span>معلومات المستخدم</div>
     <div style="font-size:13px;line-height:2.4;color:var(--txt2)">
-      <div>🏥 <strong>المستشفى:</strong> البيطري العام — كربلاء المقدسة</div>
-      <div>📍 <strong>الإحداثيات:</strong> <span dir="ltr">${CFG.hosp.lat}, ${CFG.hosp.lng}</span></div>
-      <div>🎯 <strong>نطاق البصمة:</strong> ${CFG.hosp.r} متر</div>
-      <div>👤 <strong>المستخدم الحالي:</strong> ${h(CUR.name)} (${CUR.role==='manager'?'مدير':'موظف'})</div>
+      <div>👤 <strong>الاسم:</strong> ${h(CUR.name)}</div>
+      <div>🔖 <strong>الدور:</strong> ${CUR.role==='manager'?'مدير النظام':'موظف'}</div>
       <div>🏢 <strong>القسم:</strong> ${h(CUR.dept)}</div>
     </div>
   </div>
 
+  <div class="card">
+    <div class="stitle"><span class="ico">📍</span>الفروع والعيادات المعتمدة للبصمة</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:10px">يكتشف النظام تلقائياً أقرب فرع لموقعك ويسجّل الحضور فيه.</div>
+    ${locsHTML}
+  </div>
+
   <div class="card" style="text-align:center;padding:22px">
     <div style="font-size:13px;color:var(--txt2);margin-bottom:6px">نظام البصمة الذكية</div>
-    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Smart Attendance & Inspection System — SAIS</div>
+    <div style="font-size:11px;color:var(--txt3);margin-bottom:14px">Smart Attendance & Inspection System — SAIS v2.1</div>
     <div class="logo-gold-line" style="margin:0 auto 14px"></div>
     <div style="font-size:12px;color:var(--txt3)">تصميم</div>
     <div style="font-size:15px;font-weight:900;color:var(--teal);margin-top:4px">د. وسام الجابري</div>
