@@ -507,6 +507,229 @@ a{color:inherit;text-decoration:none}
   text-align: center;
 }
 .btn-face-skip:active { background: var(--glass2); }
+
+/* ─── DIGITAL CERTIFICATE MODAL (THERMAL RECEIPT DESIGN) ─── */
+.cert-modal {
+  position: fixed; inset: 0; z-index: 3100;
+  background: rgba(5,13,26,0.92);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px; direction: rtl;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  overflow-y: auto;
+}
+.cert-modal.on { display: flex; }
+.cert-wrap {
+  width: 100%; max-width: 420px;
+  background: #ffffff; /* White receipt background */
+  color: #111111; /* Dark receipt text */
+  border: 2px solid #ddd;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-height: 90vh;
+  overflow-y: auto;
+  font-family: 'Cairo', sans-serif;
+}
+.cert-close-x {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0,0,0,0.06);
+  border: none;
+  color: #333;
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 100;
+}
+.cert-close-x:hover {
+  background: rgba(220,53,69,0.1);
+  color: #dc3545;
+}
+.cert-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px dashed #111;
+  padding-bottom: 12px;
+}
+.cert-logo {
+  font-size: 24px;
+}
+.cert-gov-text {
+  text-align: right;
+}
+.cert-gov-text h3 {
+  font-size: 13px;
+  font-weight: 900;
+  margin: 0;
+  color: #111;
+}
+.cert-gov-text p {
+  font-size: 9.5px;
+  margin: 2px 0 0;
+  color: #444;
+}
+.cert-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 4px 0;
+}
+.cert-title-main {
+  text-align: center;
+  font-size: 16px;
+  font-weight: 900;
+  color: #111;
+  margin: 4px 0;
+  letter-spacing: 0.5px;
+  border-bottom: 1.5px dashed #111;
+  padding-bottom: 6px;
+}
+.cert-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 5px 0;
+  border-bottom: 1px dashed rgba(0,0,0,0.1);
+}
+.cert-label {
+  font-size: 11.5px;
+  color: #444;
+  font-weight: 700;
+}
+.cert-val {
+  font-size: 11.5px;
+  color: #111;
+  font-weight: 900;
+  text-align: left;
+}
+.cert-qr-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 8px 0;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 8px;
+  border: 1px dashed #111;
+}
+.cert-qr-img {
+  width: 130px;
+  height: 130px;
+  background: white;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #111;
+  display: block;
+}
+.cert-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 6px;
+}
+.cert-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: var(--r);
+  font-size: 12.5px;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+  border: none;
+}
+.cert-btn-close {
+  background: #e0e0e0;
+  color: #333;
+}
+.cert-btn-print {
+  background: #111111;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+.cert-btn-print:active {
+  transform: translateY(1px);
+}
+
+@media print {
+  @page {
+    size: auto;
+    margin: 0;
+  }
+  body * {
+    visibility: hidden;
+  }
+  #cert-modal, #cert-modal * {
+    visibility: visible;
+  }
+  #cert-modal {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: auto;
+    background: white !important;
+    color: black !important;
+    backdrop-filter: none;
+    display: block !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  .cert-close-x {
+    display: none !important;
+  }
+  .cert-wrap {
+    box-shadow: none !important;
+    border: none !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 auto !important;
+    padding: 10px !important;
+    background: white !important;
+    color: black !important;
+    font-size: 11px !important;
+  }
+  .cert-actions {
+    display: none !important;
+  }
+  .cert-header {
+    border-bottom: 2px dashed black !important;
+  }
+  .cert-title-main {
+    border-bottom: 1.5px dashed black !important;
+    color: black !important;
+  }
+  .cert-row {
+    border-bottom: 1px dashed black !important;
+  }
+  .cert-val, .cert-gov-text h3 {
+    color: black !important;
+  }
+  .cert-label, .cert-gov-text p {
+    color: black !important;
+  }
+  .cert-qr-container {
+    background: transparent !important;
+    border: 1px dashed black !important;
+  }
+}
 </style>
 </head>
 <body>
@@ -539,6 +762,38 @@ a{color:inherit;text-decoration:none}
     
     <div class="face-actions">
       <button class="btn-face-skip" onclick="skipFaceVerification()">⚙️ تخطي الفحص البيومتري (للاختبار)</button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── Digital Veterinary Health Certificate Modal ─── -->
+<div class="cert-modal" id="cert-modal">
+  <div class="cert-wrap">
+    <button class="cert-close-x" onclick="closeSlaughterCertificate()">×</button>
+    <div class="cert-header">
+      <div class="cert-logo">🌾</div>
+      <div class="cert-gov-text">
+        <h3>جمهورية العراق</h3>
+        <p>وزارة الزراعة · دائرة البيطرة</p>
+        <p>المستشفى البيطري التعليمي في كربلاء</p>
+      </div>
+      <div class="cert-logo">🇮🇶</div>
+    </div>
+    
+    <div class="cert-title-main">شهادة فحص صحية بيطرية رسمية</div>
+    
+    <div class="cert-body" id="cert-modal-body">
+      <!-- Dynamic details go here -->
+    </div>
+    
+    <div class="cert-qr-container">
+      <img id="cert-qr-img" class="cert-qr-img" src="" alt="رمز التحقق QR">
+      <span style="font-size: 10px; color: var(--teal); font-weight: 700;">رمز استجابة سريع للتحقق الإلكتروني الفوري</span>
+    </div>
+    
+    <div class="cert-actions">
+      <button class="cert-btn cert-btn-print" onclick="window.print()">🖨️ طباعة الشهادة</button>
+      <button class="cert-btn cert-btn-close" onclick="closeSlaughterCertificate()">❌ إغلاق</button>
     </div>
   </div>
 </div>
@@ -631,6 +886,7 @@ a{color:inherit;text-decoration:none}
     <div id="tab-approve"  class="tab"></div>
     <div id="tab-report"   class="tab"></div>
     <div id="tab-emp"      class="tab"></div>
+    <div id="tab-slaughter" class="tab"></div>
     <div id="tab-settings" class="tab"></div>
   </div>
 
@@ -662,10 +918,13 @@ const WH = { ...WH_DEFAULTS };
 
 /* Data API (read-only — fallback to local if unavailable) */
 const DATA = {
-  login:     'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/login',
-  employees: 'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/employees',
-  attend:    'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/attendance',
-  leaves:    'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/leaves',
+  login:       'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/login',
+  employees:   'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/employees',
+  attend:      'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/attendance',
+  leaves:      'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/leaves',
+  addEmployee: 'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/add-employee',
+  addSlaughter: 'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/add-slaughter',
+  slaughterList: 'https://wissamaljaberi.app.n8n.cloud/webhook/vet-hr/slaughter-list'
 };
 
 /* ─── CONFIG ─────────────────────────────── */
@@ -770,6 +1029,10 @@ let LVS = [
   {id:'L2',empId:'E04',type:'timed',  s:D(),e:D(),         hrs:3,   rsn:'مراجعة طبية',   st:'approved',at:D()+' 07:30',by:'MGR',bat:D()+' 07:45'},
   {id:'L3',empId:'E02',type:'regular',s:'2025-04-10',e:'2025-04-12',hrs:null,rsn:'إجازة سنوية',st:'pending',at:D()+' 09:00'},
   {id:'L4',empId:'E07',type:'regular',s:'2025-04-15',e:'2025-04-17',hrs:null,rsn:'ظروف شخصية', st:'pending',at:D()+' 10:00'},
+];
+let SLAUGHTER_RECORDS = [
+  {id:'SL-20260529-01',date:D(),slaughterhouse:'مجزرة كربلاء النموذجية',doctor:'د. سجاد علي حسن',dept:'المجازر',type:'أغنام',accepted:85,rejected:2,reason:'اشتباه باليرقان والتفلس البقعي',notes:'تم إتلاف الأعضاء المصابة بالكامل تحت إشرافنا.'},
+  {id:'SL-20260529-02',date:D(),slaughterhouse:'مجزرة الهندية الحديثة',doctor:'د. سجاد علي حسن',dept:'المجازر',type:'أبقار',accepted:14,rejected:0,reason:'',notes:'الذبائح سليمة تماماً ومطابقة للشروط الصحية.'}
 ];
 
 /* ─── STATE ──────────────────────────────── */
@@ -887,6 +1150,7 @@ function initParticles(){
 /* ═══════════════════════════════════════════
    CLOCK
 ═══════════════════════════════════════════ */
+let lastAutoSyncDate = '';
 function startClock(){
   function tick(){
     const n=new Date();
@@ -896,6 +1160,19 @@ function startClock(){
     if(cd) cd.textContent=n.toLocaleDateString('ar-IQ',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     const tb=document.getElementById('tb-time');
     if(tb) tb.textContent=n.toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit'});
+    
+    // Automatic daily Google Sheets sync at 12:00 PM (Noon) Iraq time
+    const hrs = n.getHours();
+    const mins = n.getMinutes();
+    const secs = n.getSeconds();
+    const todayStr = n.toDateString();
+    if (hrs === 12 && mins === 0 && secs === 0 && lastAutoSyncDate !== todayStr) {
+      lastAutoSyncDate = todayStr;
+      if (CUR) {
+        syncData();
+        showSystemNotification('🔄 مزامنة تلقائية', '⏰ حان وقت منتصف النهار (12:00 ظهراً) - تم بدء مزامنة البيانات تلقائياً مع كوكل شيت.');
+      }
+    }
   }
   tick(); setInterval(tick,1000);
 }
@@ -1008,21 +1285,43 @@ async function syncData(){
   const dot=document.getElementById('sdot');
   const bar=document.getElementById('cbar');
   if(dot) dot.style.display='inline-block';
-  const [eR,aR,lR] = await Promise.all([
+  const [eR,aR,lR,sR] = await Promise.all([
     post(DATA.employees, {action:'getAll'}),
     post(DATA.attend,    {action:'getToday',date:D()}),
     post(DATA.leaves,    {action:'getAll'}),
+    post(DATA.slaughterList, {action:'getAll'})
   ]);
   let ok=false;
-  if(eR?.ok && Array.isArray(eR.users)       && eR.users.length)      { USERS=eR.users; ok=true; }
+  const empsList = eR?.users || eR?.employees;
+  if(eR?.ok && Array.isArray(empsList) && empsList.length) { USERS=empsList; ok=true; }
   if(aR?.ok && Array.isArray(aR.attendance)  && aR.attendance.length) { ATT=aR.attendance; ok=true; }
-  if(lR?.ok && Array.isArray(lR.leaves)      && lR.leaves.length)     { LVS=lR.leaves; ok=true; }
+  if(sR?.ok && Array.isArray(sR.records)     && sR.records.length)    { SLAUGHTER_RECORDS=sR.records; ok=true; }
+  if(lR?.ok && Array.isArray(lR.leaves)      && lR.leaves.length)     { 
+    if (CUR && CUR.role === 'manager') {
+      const prevPendingCount = LVS.filter(l => l.st === 'pending').length;
+      const newPendingCount = lR.leaves.filter(l => l.st === 'pending').length;
+      if (newPendingCount > prevPendingCount) {
+        const newLeaves = lR.leaves.filter(l => l.st === 'pending' && !LVS.some(old => old.id === l.id));
+        if (newLeaves.length > 0) {
+          const firstNew = newLeaves[0];
+          showSystemNotification('🚨 طلب إجازة جديد للمراجعة', `👤 الموظف: ${firstNew.empName} · شعبة: ${firstNew.dept}`);
+        }
+      }
+    }
+    LVS=lR.leaves; ok=true; 
+  }
   if(bar){
     bar.className='cbar '+(ok?'cb-ok':'cb-off');
     bar.textContent=ok?'🟢 متصل بـ n8n — البيانات محدّثة من Google Sheets':'⚠️ وضع تجريبي — أضف Google Sheets credential في n8n';
   }
   if(dot) dot.style.display='none';
-  if(ok) toast('✅ تمت المزامنة مع Google Sheets','s');
+  if(ok) {
+    const timeNow = new Date().toLocaleTimeString('ar-IQ', { hour: '2-digit', minute: '2-digit' }) + ' - ' + new Date().toLocaleDateString('ar-IQ', { month: 'short', day: 'numeric' });
+    localStorage.setItem('sais_last_sync_time', timeNow);
+    const lastSyncEl = document.getElementById('last-sync-time');
+    if (lastSyncEl) lastSyncEl.textContent = timeNow;
+    toast('✅ تمت المزامنة مع Google Sheets','s');
+  }
   renderTab(TAB);
 }
 
@@ -1073,9 +1372,30 @@ function doLogout(){
 ═══════════════════════════════════════════ */
 function buildNav(){
   const mgr=CUR.role==='manager';
-  const tabs=mgr
-    ?[{id:'home',ico:'🏠',l:'الرئيسية'},{id:'approve',ico:'✅',l:'الموافقات',b:true},{id:'report',ico:'📊',l:'التقرير'},{id:'emp',ico:'👥',l:'الموظفون'},{id:'settings',ico:'ℹ️',l:'معلومات'}]
-    :[{id:'home',ico:'🏠',l:'الرئيسية'},{id:'leave',ico:'📝',l:'طلب إجازة'},{id:'myleaves',ico:'📋',l:'إجازاتي'},{id:'settings',ico:'ℹ️',l:'معلومات'}];
+  const isSlaughterEmp = CUR.dept && (CUR.dept.includes('المجازر') || CUR.dept === 'المجازر');
+  
+  let tabs = [];
+  if(mgr) {
+    tabs = [
+      {id:'home',ico:'🏠',l:'الرئيسية'},
+      {id:'approve',ico:'✅',l:'الموافقات',b:true},
+      {id:'report',ico:'📊',l:'التقرير'},
+      {id:'slaughter',ico:'🥩',l:'المجازر'},
+      {id:'emp',ico:'👥',l:'الموظفون'},
+      {id:'settings',ico:'ℹ️',l:'معلومات'}
+    ];
+  } else {
+    tabs = [
+      {id:'home',ico:'🏠',l:'الرئيسية'},
+      {id:'leave',ico:'📝',l:'طلب إجازة'},
+      {id:'myleaves',ico:'📋',l:'إجازاتي'}
+    ];
+    if (isSlaughterEmp) {
+      tabs.push({id:'slaughter',ico:'🥩',l:'المجازر'});
+    }
+    tabs.push({id:'settings',ico:'ℹ️',l:'معلومات'});
+  }
+  
   document.getElementById('bnav').innerHTML=tabs.map(t=>
     `<button class="nb${t.id===TAB?' on':''}" id="nb-${t.id}" onclick="sw('${t.id}')">
        <span class="ico">${t.ico}</span>${t.l}
@@ -1106,7 +1426,7 @@ function sw(id){
 }
 
 function renderTab(id){
-  const R={home:rHome,leave:rLeave,myleaves:rMyLeaves,approve:rApprove,report:rReport,emp:rEmp,settings:rSettings};
+  const R={home:rHome,leave:rLeave,myleaves:rMyLeaves,approve:rApprove,report:rReport,emp:rEmp,slaughter:rSlaughter,settings:rSettings};
   if(R[id]) R[id]();
 }
 
@@ -1299,6 +1619,7 @@ function doCI_Actual(){
       'gm-ok'
     );
     toast(`✅ دخول مسجَّل — ${t}`,'s');
+    showSystemNotification('🏥 بصمة دخول ناجحة', `🟢 تم تسجيل حضورك بنجاح في ${loc.name} الساعة ${t}`);
     if(!res?.ok) toast('⚠️ أضف Google Sheets credential في n8n','w');
     rHome();
   },()=>{
@@ -1327,6 +1648,7 @@ async function doCO_Actual(){
   };
   const res=await post(WH.checkout,payload);
   toast(`✅ خروج مسجَّل — ${t} · ${branchLoc.name}`,'s');
+  showSystemNotification('🚪 بصمة خروج ناجحة', `🚪 تم تسجيل انصرافك بنجاح من ${branchLoc.name} الساعة ${t}`);
   if(!res?.ok) toast('⚠️ أضف Google Sheets credential في n8n','w');
   rHome();
 }
@@ -1870,8 +2192,9 @@ function printOfficialReport(dateStr) {
       </style>
     </head>
     <body>
-      <div style="text-align: left; margin-bottom: 10px;">
-        <button onclick="window.print()" style="padding: 10px 20px; background: #00c9a7; color: #fff; border: none; border-radius: 5px; font-family: 'Cairo', sans-serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,201,167,0.3);">🖨 طباعة أو حفظ PDF</button>
+      <div style="display: flex; gap: 8px; justify-content: flex-start; margin-bottom: 10px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #00c9a7; color: #fff; border: none; border-radius: 5px; font-family: 'Cairo', sans-serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(0,201,167,0.3); display: inline-flex; align-items: center; gap: 6px;">🖨 طباعة أو حفظ PDF</button>
+        <button onclick="window.close()" style="padding: 10px 20px; background: #dc3545; color: #fff; border: none; border-radius: 5px; font-family: 'Cairo', sans-serif; font-weight: 700; cursor: pointer; box-shadow: 0 4px 10px rgba(220,53,69,0.3); display: inline-flex; align-items: center; gap: 6px;">❌ إغلاق النافذة</button>
       </div>
       
       <div class="header">
@@ -1938,12 +2261,186 @@ function printOfficialReport(dateStr) {
 ═══════════════════════════════════════════ */
 function rEmp(){
   const emps=USERS.filter(u=>u.role==='employee');
+
+  // Add Employee button and toggle form (only visible/useful to system managers)
+  const addBtnAndForm = `
+    <button onclick="toggleAddEmpForm()" class="btn btn-primary" style="margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border-radius:var(--r);font-size:13px;font-weight:900">
+      ➕ إضافة موظف جديد
+    </button>
+    
+    <div id="add-emp-card" class="card fade-in" style="display:none;margin-bottom:14px;background:rgba(13,34,64,.85);border:1px solid var(--teal)">
+      <div class="stitle" style="color:var(--teal)"><span class="ico">👤</span>بيانات الموظف الجديد</div>
+      
+      <div class="fld">
+        <label>الاسم الكامل (الثلاثي)</label>
+        <input id="new-emp-name" placeholder="مثال: د. وسام عبد الرسول" type="text" style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="fld" style="margin-bottom:0">
+          <label>اسم المستخدم (English)</label>
+          <input id="new-emp-user" placeholder="wissam_vet" type="text" style="direction:ltr;text-align:right;width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
+        </div>
+        <div class="fld" style="margin-bottom:0">
+          <label>كلمة المرور</label>
+          <input id="new-emp-pass" placeholder="أدخل كلمة مرور دخول" type="password" style="direction:ltr;text-align:right;width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
+        </div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="fld" style="margin-bottom:0">
+          <label>القسم / الشعبة</label>
+          <select id="new-emp-dept" onchange="document.getElementById('custom-dept-wrap').style.display = this.value === 'custom' ? 'block' : 'none'" style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(13,34,64,.9);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
+            <option value="شعبة الإدارة">شعبة الإدارة</option>
+            <option value="العيادة الخارجية">العيادة الخارجية</option>
+            <option value="المختبر">المختبر</option>
+            <option value="الأمراض المشتركة">الأمراض المشتركة</option>
+            <option value="المجازر">المجازر</option>
+            <option value="التخطيط والمالية">التخطيط والمالية</option>
+            <option value="التلقيح الاصطناعي">التلقيح الاصطناعي</option>
+            <option value="شعبة الصحة العامة">شعبة الصحة العامة</option>
+            <option value="الصيانة والخدمات">الصيانة والخدمات</option>
+            <option value="custom">قسم آخر...</option>
+          </select>
+        </div>
+        <div class="fld" style="margin-bottom:0">
+          <label>معرّف التليغرام (اختياري)</label>
+          <input id="new-emp-tg" placeholder="6933149494" type="number" style="direction:ltr;text-align:right;width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
+        </div>
+      </div>
+      
+      <div class="fld" id="custom-dept-wrap" style="display:none;margin-bottom:12px">
+        <label>اسم القسم المخصص</label>
+        <input id="new-emp-dept-custom" placeholder="اكتب اسم القسم هنا..." type="text" style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
+      </div>
+      
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button onclick="addEmployeeSubmit()" id="btn-add-emp-save" class="btn btn-primary" style="flex:2;padding:10px;font-weight:900;font-size:13px">💾 حفظ وإضافة الموظف</button>
+        <button onclick="toggleAddEmpForm()" class="btn btn-navy" style="flex:1;padding:10px;font-weight:900;font-size:13px">إلغاء</button>
+      </div>
+    </div>
+  `;
+
   document.getElementById('tab-emp').innerHTML=`
+  ${addBtnAndForm}
   <div class="fld" style="margin-bottom:10px">
     <input id="eq" placeholder="🔍 بحث باسم الموظف..." oninput="fEmp(this.value)"
       style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
   </div>
   <div id="el">${buildEL(emps)}</div>`;
+}
+
+function toggleAddEmpForm(){
+  const form=document.getElementById('add-emp-card');
+  if(form){
+    const isHidden=form.style.display==='none';
+    form.style.display=isHidden?'block':'none';
+  }
+}
+
+async function addEmployeeSubmit(){
+  const name=document.getElementById('new-emp-name').value.trim();
+  const username=document.getElementById('new-emp-user').value.trim();
+  const password=document.getElementById('new-emp-pass').value.trim();
+  let dept=document.getElementById('new-emp-dept').value;
+  const tg=document.getElementById('new-emp-tg').value.trim();
+  const btn=document.getElementById('btn-add-emp-save');
+  
+  if(dept==='custom'){
+    dept=document.getElementById('new-emp-dept-custom').value.trim();
+  }
+  
+  if(!name||!username||!password||!dept){
+    toast('❌ يرجى ملء جميع الحقول المطلوبة','e');
+    return;
+  }
+  
+  if(USERS.some(u=>u.username.toLowerCase()===username.toLowerCase())){
+    toast('❌ اسم المستخدم هذا موجود بالفعل في النظام','e');
+    return;
+  }
+  
+  btn.disabled=true;
+  btn.textContent='⏳ جاري إضافة الموظف...';
+  
+  // Calculate new ID automatically based on highest Exx
+  let maxId=0;
+  USERS.forEach(u=>{
+    if(u.id&&u.id.startsWith('E')){
+      const num=parseInt(u.id.substring(1));
+      if(!isNaN(num)&&num>maxId) maxId=num;
+    }
+  });
+  const newId='E'+String(maxId+1).padStart(2,'0');
+  
+  const payload={
+    empId:newId,
+    name:name,
+    username:username,
+    password:password,
+    dept:dept,
+    tg:tg||'',
+    role:'employee'
+  };
+  
+  try{
+    const res=await post(DATA.addEmployee,payload);
+    
+    // Add locally for instant response
+    const newEmpObj={
+      id:newId,
+      name:name,
+      username:username,
+      password:password,
+      role:'employee',
+      dept:dept,
+      tg:tg||''
+    };
+    
+    if(!USERS.some(u=>u.id===newId)) USERS.push(newEmpObj);
+    if(!LOCAL_USERS.some(u=>u.username===username)) LOCAL_USERS.push(newEmpObj);
+    
+    if(res&&res.ok){
+      toast('✅ تم إضافة الموظف بنجاح ومزامنة شيت جوجل','s');
+    } else {
+      toast('🟢 تم الإضافة محلياً (تأكد من تفعيل خلية n8n لربط كوكل شيت)','w');
+    }
+    
+    // Reset form fields
+    document.getElementById('new-emp-name').value='';
+    document.getElementById('new-emp-user').value='';
+    document.getElementById('new-emp-pass').value='';
+    document.getElementById('new-emp-tg').value='';
+    document.getElementById('new-emp-dept').value='شعبة الإدارة';
+    document.getElementById('custom-dept-wrap').style.display='none';
+    if(document.getElementById('new-emp-dept-custom')) document.getElementById('new-emp-dept-custom').value='';
+    
+    toggleAddEmpForm();
+    rEmp();
+    
+  } catch(error){
+    console.error('Error adding employee:',error);
+    
+    // Offline local state fallback
+    const newEmpObj={
+      id:newId,
+      name:name,
+      username:username,
+      password:password,
+      role:'employee',
+      dept:dept,
+      tg:tg||''
+    };
+    if(!USERS.some(u=>u.id===newId)) USERS.push(newEmpObj);
+    if(!LOCAL_USERS.some(u=>u.username===username)) LOCAL_USERS.push(newEmpObj);
+    
+    toast('🟢 تم الإضافة محلياً في التطبيق (الوضع التجريبي نشط)','w');
+    toggleAddEmpForm();
+    rEmp();
+  } finally {
+    btn.disabled=false;
+    btn.textContent='💾 حفظ وإضافة الموظف';
+  }
 }
 
 function fEmp(q){
@@ -1972,6 +2469,443 @@ function buildEL(emps){
       </div>
     </div>`;
   }).join('');
+}
+
+/* ═══════════════════════════════════════════
+   SLAUGHTERHOUSE TAB - نظام المجازر وشهادات الـ QR
+   الجهة المستهدفة: الأطباء البيطريين (للفحص) والمدراء (لوحة إحصائيات وتقارير)
+═══════════════════════════════════════════ */
+function rSlaughter(){
+  const tab = document.getElementById('tab-slaughter');
+  if(!tab) return;
+
+  const mgr = CUR.role === 'manager';
+
+  if (mgr) {
+    // MANAGER VIEW: dashboard stats and inspection search table
+    const totalAnimals = SLAUGHTER_RECORDS.reduce((sum, r) => sum + parseInt(r.accepted || 0) + parseInt(r.rejected || 0), 0);
+    const totalAccepted = SLAUGHTER_RECORDS.reduce((sum, r) => sum + parseInt(r.accepted || 0), 0);
+    const totalRejected = SLAUGHTER_RECORDS.reduce((sum, r) => sum + parseInt(r.rejected || 0), 0);
+    const rejectionRate = totalAnimals > 0 ? ((totalRejected / totalAnimals) * 100).toFixed(1) : 0;
+
+    let html = `
+    <!-- Stats Cards -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.03)">
+        <div style="font-size:11px;color:var(--txt3);font-weight:700">🐑 إجمالي المواشي المفحوصة</div>
+        <div style="font-size:20px;font-weight:900;color:var(--txt);margin-top:4px">${totalAnimals} رأس</div>
+      </div>
+      <div class="card" style="margin-bottom:0;background:rgba(255,255,255,.03)">
+        <div style="font-size:11px;color:var(--txt3);font-weight:700">🚨 معدل الإتلاف العام</div>
+        <div style="font-size:20px;font-weight:900;color:var(--red);margin-top:4px">${rejectionRate}%</div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+      <div class="card" style="margin-bottom:0;background:rgba(0,201,167,.05);border:1px solid rgba(0,201,167,.15)">
+        <div style="font-size:11px;color:var(--teal);font-weight:700">🟢 إجمالي المقبول</div>
+        <div style="font-size:18px;font-weight:900;color:var(--teal);margin-top:4px">${totalAccepted} رأس</div>
+      </div>
+      <div class="card" style="margin-bottom:0;background:rgba(255,79,106,.05);border:1px solid rgba(255,79,106,.15)">
+        <div style="font-size:11px;color:var(--red);font-weight:700">❌ إجمالي المرفوض (التالف)</div>
+        <div style="font-size:18px;font-weight:900;color:var(--red);margin-top:4px">${totalRejected} رأس</div>
+      </div>
+    </div>
+
+    <!-- Search Input -->
+    <div class="fld" style="margin-bottom:12px">
+      <input id="slaughter-search" placeholder="🔍 بحث برقم الشهادة، اسم المجزرة، أو الطبيب..." oninput="filterSlaughter(this.value)"
+        style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
+    </div>
+
+    <!-- Report List -->
+    <div id="slaughter-list-container">
+      ${buildSlaughterListHTML(SLAUGHTER_RECORDS)}
+    </div>
+    `;
+    tab.innerHTML = html;
+  } else {
+    // VETERINARIAN / EMPLOYEE VIEW: inspection report submission form
+    const defaultDoctor = CUR.name || 'طبيب مشرف';
+    const defaultDept = CUR.dept || 'شعبة المجازر';
+
+    let html = `
+    <div class="card fade-in" style="background:rgba(13,34,64,.85);border:1px solid var(--teal)">
+      <div class="stitle" style="color:var(--teal);margin-bottom:16px"><span class="ico">🥩</span>نموذج فحص وجبات المجازر اليومي</div>
+      
+      <!-- Slaughterhouse Dropdown/Input -->
+      <div class="fld">
+        <label>اسم المجزرة المعتمدة</label>
+        <select id="sl-house-select" onchange="toggleCustomSlaughterhouse(this.value)" 
+          style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(13,34,64,.9);border:1px solid var(--gstroke);font-size:13px;color:var(--txt);font-weight:700">
+          <option value="مجزرة كربلاء النموذجية">📍 مجزرة كربلاء النموذجية</option>
+          <option value="مجزرة الهندية الحديثة">📍 مجزرة الهندية الحديثة</option>
+          <option value="مجزرة عين التمر">📍 مجزرة عين التمر</option>
+          <option value="custom">✍️ مجزرة أخرى (إدخال يدوي)</option>
+        </select>
+      </div>
+      
+      <div class="fld" id="sl-house-custom-wrap" style="display:none;margin-bottom:12px">
+        <label>اسم المجزرة المخصصة</label>
+        <input id="sl-house-custom" placeholder="اكتب اسم المجزرة هنا..." type="text" 
+          style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt)">
+      </div>
+
+      <!-- Livestock Type and Counts -->
+      <div style="display:grid;grid-template-columns:1fr;gap:12px;margin-bottom:12px">
+        <div class="fld" style="margin-bottom:0">
+          <label>نوع المواشي</label>
+          <select id="sl-type" style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(13,34,64,.9);border:1px solid var(--gstroke);font-size:13px;color:var(--txt);font-weight:700">
+            <option value="أغنام">🐏 أغنام</option>
+            <option value="أبقار">🐂 أبقار</option>
+            <option value="ماعز">🐐 ماعز</option>
+            <option value="دواجن">🐔 دواجن</option>
+            <option value="إبل">🐫 إبل</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+        <div class="fld" style="margin-bottom:0">
+          <label>العدد السليم (المقبول)</label>
+          <input id="sl-accepted" type="number" min="0" placeholder="0" oninput="calculateTotalInspected()"
+            style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt);font-weight:bold;text-align:center">
+        </div>
+        <div class="fld" style="margin-bottom:0">
+          <label>العدد التالف (المرفوض)</label>
+          <input id="sl-rejected" type="number" min="0" placeholder="0" oninput="toggleRejectionReason(this.value); calculateTotalInspected()"
+            style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);font-size:13px;color:var(--txt);font-weight:bold;text-align:center">
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;background:rgba(255,255,255,.02);padding:10px;border:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:12px;color:var(--txt3)">📊 إجمالي المواشي في الوجبة:</span>
+        <span id="sl-total-preview" style="font-size:14px;font-weight:900;color:var(--teal)">0 رأس</span>
+      </div>
+
+      <!-- Rejection Reason -->
+      <div class="fld" id="sl-reason-wrap" style="display:none;margin-bottom:12px">
+        <label style="color:var(--amber)">⚠️ أسباب الإتلاف والرفض الطبي</label>
+        <input id="sl-reason" list="medical-reasons" placeholder="مثال: اشتباه باليرقان وتفلس كبدي..." type="text" 
+          style="width:100%;padding:10px 13px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--amber);font-size:13px;color:var(--txt)">
+        <datalist id="medical-reasons">
+          <option value="اشتباه باليرقان والتفلس البقعي (Jaundice)">
+          <option value="ديدان كبدية وتليف كبدي (Fascioliasis)">
+          <option value="أكياس مائية في الكبد والرئة (Hydatid cysts)">
+          <option value="تسمم دموي حاد (Septicemia)">
+          <option value="التهاب رئوي حاد وتندب الرئتين (Pneumonia)">
+          <option value="عدم مطابقة الشروط الشرعية والسن القانوني للذبح">
+        </datalist>
+      </div>
+
+      <!-- Notes -->
+      <div class="fld">
+        <label>ملاحظات الطبيب البيطري الإضافية</label>
+        <textarea id="sl-notes" placeholder="اكتب ملاحظات الفحص أو أي توثيق خاص بالوجبة..." 
+          style="width:100%;min-height:70px;padding:9px 12px;border-radius:var(--r);background:rgba(255,255,255,.06);border:1px solid var(--gstroke);color:var(--txt);font-size:12.5px"></textarea>
+      </div>
+
+      <!-- Submit Button -->
+      <button onclick="submitSlaughterReport()" id="btn-submit-slaughter" class="btn btn-primary" 
+        style="width:100%;padding:12px;font-weight:900;font-size:14px;border-radius:var(--r);display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 15px rgba(0, 201, 167, 0.25)">
+        🥩 إرسال وتوليد الشهادة الصحية البيطرية
+      </button>
+    </div>
+    
+    <!-- Veterinarian's past reports list -->
+    <div style="margin-top:18px">
+      <div class="section-title" style="font-size:14px;font-weight:900;color:var(--txt2);margin-bottom:10px">📋 تقارير الفحص الأخيرة المرفوعة بواسطتك</div>
+      <div id="slaughter-my-list">
+        ${buildSlaughterListHTML(SLAUGHTER_RECORDS.filter(r => r.doctor === defaultDoctor))}
+      </div>
+    </div>
+    `;
+    tab.innerHTML = html;
+  }
+}
+
+function toggleCustomSlaughterhouse(val){
+  const wrap = document.getElementById('sl-house-custom-wrap');
+  if(wrap) wrap.style.display = val === 'custom' ? 'block' : 'none';
+}
+
+function toggleRejectionReason(val){
+  const count = parseInt(val || 0);
+  const wrap = document.getElementById('sl-reason-wrap');
+  if(wrap) wrap.style.display = count > 0 ? 'block' : 'none';
+}
+
+function calculateTotalInspected(){
+  const accepted = parseInt(document.getElementById('sl-accepted')?.value || 0);
+  const rejected = parseInt(document.getElementById('sl-rejected')?.value || 0);
+  const preview = document.getElementById('sl-total-preview');
+  if (preview) {
+    preview.textContent = (accepted + rejected) + ' رأس';
+  }
+}
+
+function buildSlaughterListHTML(records){
+  if(records.length === 0){
+    return '<div class="empty" style="padding:24px 12px;"><div class="ei">🥩</div>لا توجد سجلات فحص ومجازر مسجلة حالياً</div>';
+  }
+
+  // Sort: descending by certificate ID or date
+  const sorted = [...records].sort((a,b) => b.id.localeCompare(a.id));
+
+  return sorted.map(r => {
+    const total = parseInt(r.accepted || 0) + parseInt(r.rejected || 0);
+    return `
+    <div class="card fade-in" style="background:rgba(255,255,255,.02);padding:14px;border:1px solid var(--gstroke2)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px">
+        <div>
+          <span class="badge" style="background:var(--teal2);color:white;font-weight:bold;font-size:9.5px">${h(r.id)}</span>
+          <div style="font-weight:900;font-size:13.5px;color:var(--txt);margin-top:4px">${h(r.slaughterhouse)}</div>
+        </div>
+        <div style="font-size:10.5px;color:var(--txt3);font-weight:700">${r.date}</div>
+      </div>
+      
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:12px;margin:8px 0;background:rgba(0,0,0,0.2);padding:8px;border-radius:8px">
+        <div><span style="color:var(--txt3)">النوع:</span> <strong style="color:var(--gold)">${h(r.type)}</strong></div>
+        <div><span style="color:var(--txt3)">المفحوص:</span> <strong>${total} رأس</strong></div>
+        <div><span style="color:var(--txt3)">المقبول:</span> <strong style="color:var(--green)">${r.accepted}</strong></div>
+        <div><span style="color:var(--txt3)">المرفوض:</span> <strong style="color:${r.rejected > 0 ? 'var(--red)' : 'var(--txt3)'}">${r.rejected}</strong></div>
+      </div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.05)">
+        <div style="font-size:10.5px;color:var(--txt2)">
+          👤 الطبيب: <strong>${h(r.doctor)}</strong>
+        </div>
+        <button class="btn btn-navy" onclick="showSlaughterCertificate('${r.id}')"
+          style="padding:6px 12px;font-size:11px;font-weight:900;border-radius:6px;display:flex;align-items:center;gap:4px">
+          📜 عرض الشهادة الصحية
+        </button>
+      </div>
+    </div>
+    `;
+  }).join('');
+}
+
+function filterSlaughter(q){
+  q = q.trim().toLowerCase();
+  const filtered = SLAUGHTER_RECORDS.filter(r => {
+    return r.id.toLowerCase().includes(q) || 
+           r.slaughterhouse.toLowerCase().includes(q) || 
+           r.doctor.toLowerCase().includes(q) ||
+           r.type.toLowerCase().includes(q);
+  });
+  const container = document.getElementById('slaughter-list-container');
+  if(container) container.innerHTML = buildSlaughterListHTML(filtered);
+}
+
+/* ─── SUBMIT WEBHOOK AND SERIAL GENERATION ─── */
+async function submitSlaughterReport(){
+  let slaughterhouse = document.getElementById('sl-house-select').value;
+  if(slaughterhouse === 'custom'){
+    slaughterhouse = document.getElementById('sl-house-custom').value.trim();
+  }
+  const type = document.getElementById('sl-type').value;
+  const acceptedStr = document.getElementById('sl-accepted').value.trim();
+  const rejectedStr = document.getElementById('sl-rejected').value.trim();
+  const reason = document.getElementById('sl-reason') ? document.getElementById('sl-reason').value.trim() : '';
+  const notes = document.getElementById('sl-notes').value.trim();
+  
+  const accepted = parseInt(acceptedStr || 0);
+  const rejected = parseInt(rejectedStr || 0);
+
+  if(!slaughterhouse){
+    toast('❌ يرجى اختيار أو إدخال اسم المجزرة','e');
+    return;
+  }
+  if(acceptedStr === '' || accepted < 0){
+    toast('❌ يرجى إدخال عدد سليم مقبول صحيح','e');
+    return;
+  }
+  if(rejectedStr === '' || rejected < 0){
+    toast('❌ يرجى إدخال عدد تالف مرفوض صحيح','e');
+    return;
+  }
+  if(rejected > 0 && !reason){
+    toast('⚠️ يرجى تحديد أسباب الإتلاف والرفض الطبي للحالات التالفة','w');
+    return;
+  }
+
+  const btn = document.getElementById('btn-submit-slaughter');
+  btn.disabled = true;
+  btn.textContent = '⏳ جاري التحقق وتوليد الشهادة الصحية...';
+
+  // Generate Official Certificate ID: SL-YYYYMMDD-XXX
+  const dateStr = D().replace(/-/g, ''); // YYYYMMDD
+  
+  // Calculate running index
+  let maxIndex = 0;
+  SLAUGHTER_RECORDS.forEach(r => {
+    if(r.id && r.id.startsWith('SL-' + dateStr)){
+      const parts = r.id.split('-');
+      if(parts.length === 3){
+        const idx = parseInt(parts[2]);
+        if(!isNaN(idx) && idx > maxIndex) maxIndex = idx;
+      }
+    }
+  });
+  const newIndexStr = String(maxIndex + 1).padStart(2, '0');
+  const certId = `SL-${dateStr}-${newIndexStr}`;
+
+  const doctorName = CUR.name || 'طبيب مشرف';
+  const deptName = CUR.dept || 'شعبة المجازر';
+
+  // Capture GPS parameters
+  let coordinates = { lat: 0, lng: 0 };
+  try {
+    const pos = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 4000 });
+    });
+    coordinates.lat = pos.coords.latitude;
+    coordinates.lng = pos.coords.longitude;
+  } catch(e) {
+    console.warn('Geolocation capture failed or denied:', e);
+  }
+
+  const payload = {
+    id: certId,
+    date: D(),
+    slaughterhouse: slaughterhouse,
+    doctor: doctorName,
+    dept: deptName,
+    type: type,
+    accepted: accepted,
+    rejected: rejected,
+    reason: rejected > 0 ? reason : '',
+    notes: notes,
+    gps_lat: coordinates.lat,
+    gps_lng: coordinates.lng
+  };
+
+  try {
+    const res = await post(DATA.addSlaughter, payload);
+    
+    // Add locally for instant reaction
+    if(!SLAUGHTER_RECORDS.some(r => r.id === certId)){
+      SLAUGHTER_RECORDS.push(payload);
+    }
+    
+    if(res && res.ok){
+      toast('✅ تم تسجيل الفحص وإرسال البيانات للكوكل شيت بنجاح','s');
+    } else {
+      toast('🟢 تم توليد الشهادة وحفظها محلياً (وضع تجريبي نشط)','w');
+    }
+
+    // Reset Form
+    document.getElementById('sl-accepted').value = '';
+    document.getElementById('sl-rejected').value = '';
+    if(document.getElementById('sl-reason')) document.getElementById('sl-reason').value = '';
+    document.getElementById('sl-notes').value = '';
+    document.getElementById('sl-house-select').value = 'مجزرة كربلاء النموذجية';
+    toggleCustomSlaughterhouse('مجزرة كربلاء النموذجية');
+    toggleRejectionReason(0);
+    calculateTotalInspected();
+
+    // Re-render tab lists
+    rSlaughter();
+
+    // Open the Certificate Modal immediately for user printing
+    showSlaughterCertificate(certId);
+
+  } catch(error) {
+    console.error('Error submitting slaughter report:', error);
+    
+    // Offline local state fallback
+    if(!SLAUGHTER_RECORDS.some(r => r.id === certId)){
+      SLAUGHTER_RECORDS.push(payload);
+    }
+    
+    toast('🟢 تم الحفظ وتوليد الشهادة محلياً في التطبيق بدون شبكة','w');
+    
+    // Reset Form
+    document.getElementById('sl-accepted').value = '';
+    document.getElementById('sl-rejected').value = '';
+    if(document.getElementById('sl-reason')) document.getElementById('sl-reason').value = '';
+    document.getElementById('sl-notes').value = '';
+    calculateTotalInspected();
+    
+    rSlaughter();
+    showSlaughterCertificate(certId);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '🥩 إرسال وتوليد الشهادة الصحية البيطرية';
+  }
+}
+
+/* ─── DIGITAL CERTIFICATE MODAL ENGINE ─── */
+function showSlaughterCertificate(id){
+  const rec = SLAUGHTER_RECORDS.find(r => r.id === id);
+  if(!rec) {
+    toast('❌ لم يتم العثور على الشهادة المطلوبة','e');
+    return;
+  }
+
+  const modal = document.getElementById('cert-modal');
+  const body = document.getElementById('cert-modal-body');
+  const qr = document.getElementById('cert-qr-img');
+
+  if(!modal || !body || !qr) return;
+
+  // Build high-end metadata for print and display (Optimized for white thermal paper background)
+  body.innerHTML = `
+    <div class="cert-row">
+      <span class="cert-label">رقم الشهادة الرقمية:</span>
+      <span class="cert-val" style="font-family:monospace;letter-spacing:1px;color:#00796b">${h(rec.id)}</span>
+    </div>
+    <div class="cert-row">
+      <span class="cert-label">تاريخ ووقت الفحص:</span>
+      <span class="cert-val">${rec.date}</span>
+    </div>
+    <div class="cert-row">
+      <span class="cert-label">الموقع / اسم المجزرة:</span>
+      <span class="cert-val" style="color:#111">${h(rec.slaughterhouse)}</span>
+    </div>
+    <div class="cert-row">
+      <span class="cert-label">الطبيب البيطري الفاحص:</span>
+      <span class="cert-val" style="font-weight:bold;color:#111">${h(rec.doctor)}</span>
+    </div>
+    <div class="cert-row">
+      <span class="cert-label">الشعبة / القسم المشرف:</span>
+      <span class="cert-val">${h(rec.dept)}</span>
+    </div>
+    <div class="cert-row">
+      <span class="cert-label">نوع الذبائح والمواشي:</span>
+      <span class="cert-val" style="color:#d84315;font-weight:900">${h(rec.type)}</span>
+    </div>
+    <div class="cert-row">
+      <span class="cert-label">العدد الصالح والمقبول:</span>
+      <span class="cert-val" style="color:#00875a;font-weight:900;font-size:13px">${rec.accepted} رأس</span>
+    </div>
+    <div class="cert-row">
+      <span class="cert-label">العدد التالف والمرفوض:</span>
+      <span class="cert-val" style="color:${rec.rejected > 0 ? '#d32f2f' : '#555'};font-weight:900">${rec.rejected} رأس</span>
+    </div>
+    ${rec.rejected > 0 ? `
+    <div class="cert-row" style="flex-direction:column;align-items:flex-start;gap:4px">
+      <span class="cert-label" style="color:#e65100">⚠️ أسباب الإتلاف الطبي المعتمدة:</span>
+      <span class="cert-val" style="color:#e65100;text-align:right;font-size:11.5px;line-height:1.4">${h(rec.reason)}</span>
+    </div>
+    ` : ''}
+    <div class="cert-row" style="flex-direction:column;align-items:flex-start;gap:4px;border-bottom:none">
+      <span class="cert-label">📝 توثيق وملاحظات الفحص البيطري:</span>
+      <span class="cert-val" style="text-align:right;font-weight:normal;line-height:1.4;font-size:11.5px;color:#444">
+        ${h(rec.notes || 'تم الفحص الدقيق والختم بالأختام الرسمية المعتمدة للمستشفى البيطري في كربلاء.')}
+      </span>
+    </div>
+  `;
+
+  // Generate dynamic official QR Code using highly reliable global API
+  const verifyURL = `https://vetkarbala.iq/verify-certificate?id=${rec.id}&sl=${encodeURIComponent(rec.slaughterhouse)}&doc=${encodeURIComponent(rec.doctor)}&acc=${rec.accepted}&rej=${rec.rejected}`;
+  qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyURL)}`;
+
+  modal.classList.add('on');
+}
+
+function closeSlaughterCertificate(){
+  const modal = document.getElementById('cert-modal');
+  if(modal) modal.classList.remove('on');
 }
 
 /* ═══════════════════════════════════════════
@@ -2072,6 +3006,21 @@ function rSettings(){
     </div>`;
   }
 
+  /* قسم مزامنة جوجل شيت — للمدير فقط */
+  const sheetsSyncSection = CUR.role === 'manager' ? `
+  <div class="card fade-in">
+    <div class="stitle" style="color:var(--teal)"><span class="ico">🔄</span>مزامنة وتحديث البيانات (Google Sheets)</div>
+    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px;line-height:1.6">
+      تحديث قائمة المنتسبين وسجلات الحضور والانصراف وطلبات الإجازات بالكامل ومزامنتها مباشرة مع مستند Google Sheets الفعلي المعتمد في n8n.
+    </div>
+    <button onclick="syncData()" id="btn-manual-sync" class="btn btn-primary" style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 14px;font-weight:900;font-size:13px;border-radius:var(--r)">
+      🔄 مزامنة البيانات الفورية الآن
+    </button>
+    <div style="font-size:11px;color:var(--txt3);text-align:center;margin-top:8px">
+      آخر تحديث ناجح: <strong id="last-sync-time" style="color:var(--teal)">${localStorage.getItem('sais_last_sync_time') || 'غير محدد'}</strong>
+    </div>
+  </div>` : '';
+
   document.getElementById('tab-settings').innerHTML=`
   <div class="card">
     <div class="stitle"><span class="ico">ℹ️</span>معلومات المستخدم</div>
@@ -2081,6 +3030,8 @@ function rSettings(){
       <div>🏢 <strong>القسم:</strong> ${h(CUR.dept)}</div>
     </div>
   </div>
+
+  ${sheetsSyncSection}
 
   <div class="card">
     <div class="stitle"><span class="ico">📍</span>الفروع والعيادات المعتمدة للبصمة</div>
@@ -2194,6 +3145,39 @@ async function detectMyIP(){
 initParticles();
 startClock();
 initBiometric();
+initNotifications();
+
+/* ─── PWA SYSTEM NOTIFICATIONS (Phase 6) ─── */
+function initNotifications() {
+  if ('Notification' in window) {
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+  }
+}
+
+function showSystemNotification(title, body) {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+          body: body,
+          icon: './icon-192.png',
+          badge: './icon-192.png',
+          vibrate: [200, 100, 200],
+          data: {
+            dateOfArrival: Date.now()
+          }
+        });
+      });
+    } else {
+      new Notification(title, {
+        body: body,
+        icon: './icon-192.png'
+      });
+    }
+  }
+}
 
 /* PWA Service Worker — relative path + auto-update */
 if('serviceWorker' in navigator){

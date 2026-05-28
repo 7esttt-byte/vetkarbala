@@ -1,0 +1,1329 @@
+{
+  "name": "VetHR Smart Attendance & Inspection System (Google Sheets Edition)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/checkin",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "524ce7bd-d076-4ac8-8923-61a7f754c431",
+      "name": "Webhook — تسجيل الدخول",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        96
+      ],
+      "webhookId": "52b2d169-2544-40e9-ad9c-1b4ac89b23df"
+    },
+    {
+      "parameters": {
+        "jsCode": "const HOSPITAL_LAT=32.58591,HOSPITAL_LNG=44.02225,RADIUS_METERS=300;\nfunction hav(a,b,c,d){const R=6371000,dL=(c-a)*Math.PI/180,dl=(d-b)*Math.PI/180,x=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dl/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}\nconst body=$input.item.json.body||$input.item.json;\nconst {empId,empName,lat,lng,action,dept,telegramId}=body;\nif(!empId||!lat||!lng) return [{json:{ok:false,message:\"بيانات ناقصة\",empId,action}}];\nconst distance=Math.round(hav(parseFloat(lat),parseFloat(lng),HOSPITAL_LAT,HOSPITAL_LNG));\nif(distance>RADIUS_METERS) return [{json:{ok:false,message:\"خارج نطاق المستشفى — \"+distance+\" متر\",empId,empName,distance,action}}];\nconst iraqTime=new Date(Date.now()+3*3600000);\nconst timeStr=iraqTime.toISOString().substr(11,5),dateStr=iraqTime.toISOString().substr(0,10);\nreturn [{json:{ok:true,empId,empName:empName||empId,dept:dept||\"\",telegramId:telegramId||\"\",lat:parseFloat(lat),lng:parseFloat(lng),distance,timeStr,dateStr,action:action||\"checkin\"}}];"
+      },
+      "id": "b1fdfe69-0270-49d9-872a-9aa9f939a58d",
+      "name": "Code — التحقق من GPS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/checkout",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3835dcc2-741a-4037-be7e-6b878f12b06b",
+      "name": "Webhook — تسجيل الخروج",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        288
+      ],
+      "webhookId": "ec9414a5-fc27-4268-9694-f3491bd370ff"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "gps-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "771826f2-eb14-4769-b323-4c07c2874771",
+      "name": "IF — الموقع صحيح؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        64,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s",
+          "mode": "list",
+          "cachedResultName": "VetHR_GoogleSheets_Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1889375593,
+          "mode": "list",
+          "cachedResultName": "الموظفون"
+        },
+        "filtersUI": {
+          "values": []
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange",
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "id": "70841922-d205-4929-9a3b-477d41ab32db",
+      "name": "Sheets — قراءة الموظفين",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        288,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, message: $json.message, distance: $json.distance }) }}",
+        "options": {}
+      },
+      "id": "a398a597-8902-46db-a5c1-67ac447625d0",
+      "name": "Response — رفض GPS",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        288,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const g=$(\"Code — التحقق من GPS\").item.json;\nconst emp=$input.all().find(e=>String(e.json[\"رقم الموظف\"]||\"\").trim()===String(g.empId||\"\").trim()||String(e.json[\"اسم المستخدم\"]||\"\").trim()===String(g.empId||\"\").trim());\nif(!emp) return [{json:{ok:false,message:\"الموظف \"+g.empId+\" غير موجود\"}}];\nreturn [{json:{ok:true,empId:g.empId,empName:emp.json[\"الاسم الكامل\"]||g.empName,dept:emp.json[\"القسم\"]||\"\",telegramId:emp.json[\"تلغرام ID\"]||g.telegramId||\"\",lat:g.lat,lng:g.lng,distance:g.distance,timeStr:g.timeStr,dateStr:g.dateStr,action:g.action}}];"
+      },
+      "id": "80d6c5a4-097e-4728-98b4-8ca934c463f5",
+      "name": "Code — مطابقة الموظف",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        512,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s",
+          "mode": "list",
+          "cachedResultName": "VetHR_GoogleSheets_Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1566654128,
+          "mode": "list",
+          "cachedResultName": "الحضور"
+        },
+        "options": {}
+      },
+      "id": "adf85353-6f9b-4dfb-918d-9f5601c8b7e2",
+      "name": "Sheets — قراءة حضور اليوم",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        736,
+        96
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const emp=$(\"Code — مطابقة الموظف\").item.json;\nconst rec=$input.all().find(r=>String(r.json[\"رقم الموظف\"]||\"\").trim()===String(emp.empId||\"\").trim()&&String(r.json[\"التاريخ\"]||\"\").trim()===String(emp.dateStr||\"\").trim());\nlet workedHours=null;\nif(emp.action===\"checkout\"&&rec&&rec.json[\"وقت الدخول\"]){\n  const [h1,m1]=String(rec.json[\"وقت الدخول\"]).split(\":\").map(Number),[h2,m2]=emp.timeStr.split(\":\").map(Number);\n  const mins=(h2*60+m2)-(h1*60+m1);\n  if(mins>0) workedHours=Math.floor(mins/60)+\"س \"+(mins%60)+\"د\";\n}\nreturn [{json:{...emp,existingRecord:rec?rec.json:null,isNewRecord:!rec,workedHours}}];"
+      },
+      "id": "5851cb1a-c2ce-4bf7-9c39-3988dc8a0e40",
+      "name": "Code — فحص سجل اليوم",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        960,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "is-checkin",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "checkin",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "7e260838-a191-48a7-a1a9-e1e418fa6b97",
+      "name": "IF — دخول أم خروج؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1566654128,
+          "mode": "list",
+          "cachedResultName": "الحضور"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "رقم الموظف": "={{ $json.empId }}",
+            "اسم الموظف": "={{ $json.empName }}",
+            "القسم": "={{ $json.dept }}",
+            "التاريخ": "={{ $json.dateStr }}",
+            "وقت الدخول": "={{ $json.timeStr }}",
+            "خط العرض": "={{ $json.lat }}",
+            "خط الطول": "={{ $json.lng }}",
+            "المسافة (م)": "={{ $json.distance }}",
+            "الحالة": "حاضر"
+          },
+          "matchingColumns": [
+            "رقم الموظف",
+            "التاريخ"
+          ]
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "id": "67b01f12-eee7-47d8-a438-bf5af726d6e1",
+      "name": "Sheets — تسجيل الدخول",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1408,
+        0
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1566654128,
+          "mode": "list",
+          "cachedResultName": "الحضور"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "رقم الموظف": "={{ $json.empId }}",
+            "التاريخ": "={{ $json.dateStr }}",
+            "وقت الخروج": "={{ $json.timeStr }}",
+            "اسم الموظف": "={{ $json.empName }}",
+            "القسم": "={{ $json.dept }}",
+            "وقت الدخول": "={{ $json.timeStr }}",
+            "خط العرض": "={{ $json.lat }}",
+            "خط الطول": "={{ $json.lng }}",
+            "الحالة": "حاضر"
+          },
+          "matchingColumns": [
+            "رقم الموظف",
+            "التاريخ"
+          ]
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "id": "ef2b835d-8a08-4db3-92a0-8b62ccb05d7d",
+      "name": "Sheets — تسجيل الخروج",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1408,
+        192
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramId || \"6933149494\" }}",
+        "additionalFields": {}
+      },
+      "id": "32b60a08-afd4-4155-90b3-d81129f5b79e",
+      "name": "Telegram — إشعار الموظف",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1632,
+        96
+      ],
+      "webhookId": "a7520fbf-9319-4017-ad2d-942a8cb9be74",
+      "credentials": {
+        "telegramApi": {
+          "id": "gY8fEasOzLEVJ5ea",
+          "name": "Telegram account 9"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, message: $(\"Code — فحص سجل اليوم\").item.json.action === \"checkin\" ? \"تم تسجيل الدخول — \" + $(\"Code — فحص سجل اليوم\").item.json.timeStr : \"تم تسجيل الخروج — \" + $(\"Code — فحص سجل اليوم\").item.json.timeStr, time: $(\"Code — فحص سجل اليوم\").item.json.timeStr, distance: $(\"Code — فحص سجل اليوم\").item.json.distance }) }}",
+        "options": {}
+      },
+      "id": "fb122efa-8e2c-4f9f-ba29-d3348b30f04f",
+      "name": "Response — نجاح",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1856,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/leave-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "788a18ae-af06-4157-9f5b-3b59fa96a269",
+      "name": "Webhook — طلب إجازة",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        608
+      ],
+      "webhookId": "1b860817-729a-4518-8b13-9066dec10c03"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body=$input.item.json.body||$input.item.json;\nconst {empId,empName,dept,type,startDate,endDate,hours,reason,telegramId}=body;\nif(!empId||!type||!startDate||!reason) return [{json:{ok:false,message:\"بيانات ناقصة في طلب الإجازة\"}}];\nconst iraqTime=new Date(Date.now()+3*3600000);\nconst reqAt=iraqTime.toISOString().substr(0,16).replace(\"T\",\" \");\nconst leaveId=\"LV-\"+Date.now();\nlet leaveType=\"\";\nif(type===\"regular\") leaveType=\"اعتيادية\";\nelse if(type===\"timed\") leaveType=\"زمنية\";\nelse leaveType=type;\nif(type===\"timed\"&&(!hours||parseInt(hours)<1||parseInt(hours)>8)) return [{json:{ok:false,message:\"الإجازة الزمنية: الساعات يجب بين 1 و 8\"}}];\nreturn [{json:{ok:true,\"معرف الإجازة\":leaveId,\"رقم الموظف\":empId,\"اسم الموظف\":empName||empId,\"القسم\":dept||\"\",\"نوع الإجازة\":leaveType,\"تاريخ البداية\":startDate,\"تاريخ النهاية\":type===\"timed\"?startDate:(endDate||startDate),\"عدد الساعات\":type===\"timed\"?parseInt(hours):null,\"السبب\":reason,\"الحالة\":\"بانتظار الموافقة\",\"تاريخ الطلب\":reqAt,\"موافقة المدير\":\"\",\"تاريخ القرار\":\"\",\"تلغرام الموظف\":telegramId||\"\",leaveId,empId,empName:empName||empId,dept:dept||\"\",telegramId:telegramId||\"\",type,startDate,endDate:type===\"timed\"?startDate:(endDate||startDate),hours:type===\"timed\"?parseInt(hours):null,reason,reqAt}}];"
+      },
+      "id": "3b524a63-2ad6-41eb-a8b3-5c7e5facea59",
+      "name": "Code — معالجة الطلب",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "id": "leave-ok"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8ec11ddd-cf1f-4020-9e61-d05916607d14",
+      "name": "IF — الطلب صحيح؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        64,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s",
+          "mode": "list",
+          "cachedResultName": "VetHR_GoogleSheets_Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1108595158,
+          "mode": "list",
+          "cachedResultName": "الإجازات"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "معرف الإجازة": "={{ $json[\"معرف الإجازة\"] }}",
+            "رقم الموظف": "={{ $json[\"رقم الموظف\"] }}",
+            "اسم الموظف": "={{ $json[\"اسم الموظف\"] }}",
+            "القسم": "={{ $json[\"القسم\"] }}",
+            "نوع الإجازة": "={{ $json[\"نوع الإجازة\"] }}",
+            "تاريخ البداية": "={{ $json[\"تاريخ البداية\"] }}",
+            "تاريخ النهاية": "={{ $json[\"تاريخ النهاية\"] }}",
+            "عدد الساعات": "={{ $json[\"عدد الساعات\"] }}",
+            "السبب": "={{ $json[\"السبب\"] }}",
+            "الحالة": "={{ $json[\"الحالة\"] }}",
+            "تاريخ الطلب": "={{ $json[\"تاريخ الطلب\"] }}",
+            "موافقة المدير": "={{ $json[\"موافقة المدير\"] }}",
+            "تاريخ القرار": "={{ $json[\"تاريخ القرار\"] }}",
+            "تلغرام الموظف": "={{ $json[\"تلغرام الموظف\"] }}"
+          }
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 3
+            }
+          }
+        }
+      },
+      "id": "cb53da35-ac93-4598-9cac-ecaca91fdb3e",
+      "name": "Sheets — حفظ طلب الإجازة",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        288,
+        512
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, message: $json.message || \"خطأ في معالجة الطلب\" }) }}",
+        "options": {}
+      },
+      "id": "a7272455-9dc8-4fb4-8ad3-06cb3d414fb6",
+      "name": "Response — طلب مرفوض",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        288,
+        704
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6933149494",
+        "text": "={{ $json.reason }} {{ $json.empName }}{{ $json.dept }} {{ $json.type }} ",
+        "additionalFields": {}
+      },
+      "id": "b517fcf6-3a60-42ee-b858-25b95fbfc219",
+      "name": "Telegram — إشعار المدير",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        512,
+        512
+      ],
+      "webhookId": "adaab5a1-0537-4cb3-9c11-039e106da15d",
+      "credentials": {
+        "telegramApi": {
+          "id": "gY8fEasOzLEVJ5ea",
+          "name": "Telegram account 9"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, leaveId: $(\"Code — معالجة الطلب\").item.json.leaveId, message: \"تم إرسال طلب الإجازة بنجاح — بانتظار موافقة المدير\" }) }}",
+        "options": {}
+      },
+      "id": "74c0ace2-c426-4d16-a42d-9964204d1901",
+      "name": "Response — طلب مقبول",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        736,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/leave-action",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "da3241c3-b9b8-4d2c-841f-12233365dedf",
+      "name": "Webhook — قرار الإجازة",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        928
+      ],
+      "webhookId": "9f0feb1b-26cb-4035-9bf3-5a6e9cc9c15b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body=$input.item.json.body||$input.item.json;\nconst leaveId=body.leaveId;\nconst action=body.action;\nconst managerId=body.managerId;\nconst managerName=body.managerName;\nif(!leaveId||!action) return [{json:{ok:false,message:\"leaveId و action مطلوبان (leaveId: \"+leaveId+\", action: \"+action+\")\"}}];\nconst iraqTime=new Date(Date.now()+3*3600000);\nconst decisionAt=iraqTime.toISOString().substr(0,16).replace(\"T\",\" \");\nconst newStatus=action===\"approve\"?\"مقبولة\":\"مرفوضة\";\nconst managerDecision=managerName||\"المدير\";\nreturn [{json:{ok:true,leaveId,action,newStatus,managerId:managerId||\"MGR\",managerDecision,decisionAt,\"معرف الإجازة\":leaveId,\"الحالة\":newStatus,\"موافقة المدير\":managerDecision,\"تاريخ القرار\":decisionAt}}];"
+      },
+      "id": "4e34041a-57b4-4c22-9b68-b129bd8415dc",
+      "name": "Code — معالجة القرار",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s",
+          "mode": "list",
+          "cachedResultName": "VetHR_GoogleSheets_Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1108595158,
+          "mode": "list",
+          "cachedResultName": "الإجازات"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange",
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "id": "66b007bb-e338-4402-b12b-d364ae5e7376",
+      "name": "Sheets — قراءة الإجازات",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        64,
+        928
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const ad=$(\"Code — معالجة القرار\").item.json;\nconst leave=$input.all().find(l=>String(l.json[\"معرف الإجازة\"]||\"\").trim()===String(ad.leaveId||\"\").trim());\nif(!leave) return [{json:{ok:false,message:\"الإجازة \"+ad.leaveId+\" غير موجودة\",action:ad.action}}];\nif(String(leave.json[\"الحالة\"]||\"\").trim()!==\"بانتظار الموافقة\") return [{json:{ok:false,message:\"الإجازة \"+ad.leaveId+\" تم معالجتها مسبقاً — الحالة: \"+leave.json[\"الحالة\"],action:ad.action}}];\nreturn [{json:{ok:true,\"معرف الإجازة\":leave.json[\"معرف الإجازة\"],\"الحالة\":ad.newStatus,\"موافقة المدير\":ad.managerDecision,\"تاريخ القرار\":ad.decisionAt,leaveId:leave.json[\"معرف الإجازة\"],empId:leave.json[\"رقم الموظف\"],empName:leave.json[\"اسم الموظف\"],dept:leave.json[\"القسم\"],telegramId:leave.json[\"تلغرام الموظف\"],type:leave.json[\"نوع الإجازة\"],startDate:leave.json[\"تاريخ البداية\"],endDate:leave.json[\"تاريخ النهاية\"],hours:leave.json[\"عدد الساعات\"],reason:leave.json[\"السبب\"],action:ad.action,newStatus:ad.newStatus,managerName:ad.managerDecision,decisionAt:ad.decisionAt}}];"
+      },
+      "id": "0503590e-270e-4212-9c0d-acae60e7ba81",
+      "name": "Code — إيجاد الإجازة",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        288,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1108595158,
+          "mode": "list",
+          "cachedResultName": "الإجازات"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "معرف الإجازة": "={{ $json[\"معرف الإجازة\"] }}",
+            "الحالة": "={{ $json[\"الحالة\"] }}",
+            "موافقة المدير": "={{ $json[\"موافقة المدير\"] }}",
+            "تاريخ القرار": "={{ $json[\"تاريخ القرار\"] }}",
+            "row_number": 0
+          },
+          "matchingColumns": [
+            "معرف الإجازة"
+          ]
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "id": "cc7c75ab-95c0-4c81-952d-c7dc47dcf7e5",
+      "name": "Sheets — تحديث الإجازة",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        512,
+        928
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramId || \"6933149494\" }}",
+        "text": "={{ $json.action === \"approve\" ? \"✅ تمت الموافقة على طلب إجازتك\\n\" + $json.type + \" — \" + $json.startDate + (($json.endDate && $json.endDate !== $json.startDate) ? \" إلى \" + $json.endDate : \"\") + (($json.hours) ? \"\\n⏱️ عدد الساعات: \" + $json.hours : \"\") : \"❌ تم رفض طلب إجازتك\\n\" + $json.type + \" — \" + $json.startDate }}",
+        "additionalFields": {}
+      },
+      "id": "896a64e8-d84f-4e50-a503-22b0b7bc9e4e",
+      "name": "Telegram — إشعار الموظف بالقرار",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        736,
+        928
+      ],
+      "webhookId": "355fae36-0b5e-4d37-bfb4-badfcbd4edcf",
+      "credentials": {
+        "telegramApi": {
+          "id": "gY8fEasOzLEVJ5ea",
+          "name": "Telegram account 9"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, message: $(\"Code — إيجاد الإجازة\").item.json.action === \"approve\" ? \"تمت الموافقة وإشعار الموظف\" : \"تم الرفض وإشعار الموظف\", leaveId: $(\"Code — إيجاد الإجازة\").item.json.leaveId, status: $(\"Code — إيجاد الإجازة\").item.json.newStatus }) }}",
+        "options": {}
+      },
+      "id": "185ad92f-0d01-4977-abb9-f5ed16dd75c6",
+      "name": "Response — قرار مسجّل",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        960,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/add-employee",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "add-employee-webhook-id",
+      "name": "Webhook — إضافة موظف",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        1400
+      ],
+      "webhookId": "add-emp-webhook-custom-uid"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s",
+          "mode": "list",
+          "cachedResultName": "VetHR_GoogleSheets_Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1889375593,
+          "mode": "list",
+          "cachedResultName": "الموظفون"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "رقم الموظف": "={{ $json.body.empId }}",
+            "الاسم الكامل": "={{ $json.body.name }}",
+            "اسم المستخدم": "={{ $json.body.username }}",
+            "كلمة المرور": "={{ $json.body.password }}",
+            "القسم": "={{ $json.body.dept }}",
+            "الدور": "={{ $json.body.role || 'employee' }}",
+            "تلغرام ID": "={{ $json.body.tg || '' }}"
+          }
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "id": "add-employee-sheets-append-id",
+      "name": "Sheets — إضافة موظف",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        1400
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, message: \"تم إضافة الموظف بنجاح لمستند جوجل شيت\" }) }}",
+        "options": {}
+      },
+      "id": "add-employee-response-id",
+      "name": "Response — نجاح الإضافة",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        64,
+        1400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/add-slaughter",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "add-slaughter-webhook-id",
+      "name": "Webhook — تسجيل فحص المجزرة",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        1800
+      ],
+      "webhookId": "add-slaughter-webhook-custom-uid"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s",
+          "mode": "list",
+          "cachedResultName": "VetHR_GoogleSheets_Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "سجلات المجازر",
+          "mode": "name"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "رقم الشهادة": "={{ $json.body.id }}",
+            "تاريخ الفحص": "={{ $json.body.date }}",
+            "اسم المجزرة": "={{ $json.body.slaughterhouse }}",
+            "الطبيب المشرف": "={{ $json.body.doctor }}",
+            "القسم": "={{ $json.body.dept }}",
+            "نوع المواشي": "={{ $json.body.type }}",
+            "العدد المقبول": "={{ $json.body.accepted }}",
+            "العدد المرفوض": "={{ $json.body.rejected }}",
+            "سبب الإتلاف": "={{ $json.body.reason }}",
+            "ملاحظات": "={{ $json.body.notes }}"
+          }
+        },
+        "options": {
+          "locationDefine": {
+            "values": {
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "id": "add-slaughter-sheets-append-id",
+      "name": "Sheets — حفظ فحص المجزرة",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        1800
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, message: \"تم تسجيل فحص المجزرة بنجاح وتحديث جوجل شيت\" }) }}",
+        "options": {}
+      },
+      "id": "add-slaughter-response-id",
+      "name": "Response — نجاح تسجيل المجزرة",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        64,
+        1800
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/slaughter-list",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "slaughter-list-webhook-id",
+      "name": "Webhook — قائمة فحص المجازر",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -384,
+        2200
+      ],
+      "webhookId": "slaughter-list-webhook-custom-uid"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1omOclvKpIY_1AINyaQXaUBMjXpZPbdDiBOzQM2TAM6s",
+          "mode": "list",
+          "cachedResultName": "VetHR_GoogleSheets_Template"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "سجلات المجازر",
+          "mode": "name"
+        },
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange",
+              "headerRow": 3,
+              "firstDataRow": 4
+            }
+          }
+        }
+      },
+      "id": "slaughter-list-sheets-read-id",
+      "name": "Sheets — قراءة سجلات المجازر",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        -160,
+        2200
+      ],
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "SeE8lTCpG5hdBgIu",
+          "name": "Google Sheets account 6"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all();\nconst records = rows.map(row => {\n  const data = row.json;\n  return {\n    id: data[\"رقم الشهادة\"] || \"\",\n    date: data[\"تاريخ الفحص\"] || \"\",\n    slaughterhouse: data[\"اسم المجزرة\"] || \"\",\n    doctor: data[\"الطبيب المشرف\"] || \"\",\n    dept: data[\"القسم\"] || \"\",\n    type: data[\"نوع المواشي\"] || \"\",\n    accepted: parseInt(data[\"العدد المقبول\"] || 0),\n    rejected: parseInt(data[\"العدد المرفوض\"] || 0),\n    reason: data[\"سبب الإتلاف\"] || \"\",\n    notes: data[\"ملاحظات\"] || \"\"\n  };\n});\nreturn [{ json: { ok: true, records } }];"
+      },
+      "id": "slaughter-list-code-process-id",
+      "name": "Code — معالجة بيانات المجازر",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        64,
+        2200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "slaughter-list-response-id",
+      "name": "Response — إرجاع قائمة المجازر",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        288,
+        2200
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook — تسجيل الدخول": {
+      "main": [
+        [
+          {
+            "node": "Code — التحقق من GPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — التحقق من GPS": {
+      "main": [
+        [
+          {
+            "node": "IF — الموقع صحيح؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — تسجيل الخروج": {
+      "main": [
+        [
+          {
+            "node": "Code — التحقق من GPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — الموقع صحيح؟": {
+      "main": [
+        [
+          {
+            "node": "Sheets — قراءة الموظفين",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response — رفض GPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — قراءة الموظفين": {
+      "main": [
+        [
+          {
+            "node": "Code — مطابقة الموظف",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — مطابقة الموظف": {
+      "main": [
+        [
+          {
+            "node": "Sheets — قراءة حضور اليوم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — قراءة حضور اليوم": {
+      "main": [
+        [
+          {
+            "node": "Code — فحص سجل اليوم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — فحص سجل اليوم": {
+      "main": [
+        [
+          {
+            "node": "IF — دخول أم خروج؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — دخول أم خروج؟": {
+      "main": [
+        [
+          {
+            "node": "Sheets — تسجيل الدخول",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Sheets — تسجيل الخروج",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — تسجيل الدخول": {
+      "main": [
+        [
+          {
+            "node": "Telegram — إشعار الموظف",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — تسجيل الخروج": {
+      "main": [
+        [
+          {
+            "node": "Telegram — إشعار الموظف",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram — إشعار الموظف": {
+      "main": [
+        [
+          {
+            "node": "Response — نجاح",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — طلب إجازة": {
+      "main": [
+        [
+          {
+            "node": "Code — معالجة الطلب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — معالجة الطلب": {
+      "main": [
+        [
+          {
+            "node": "IF — الطلب صحيح؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — الطلب صحيح؟": {
+      "main": [
+        [
+          {
+            "node": "Sheets — حفظ طلب الإجازة",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response — طلب مرفوض",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — حفظ طلب الإجازة": {
+      "main": [
+        [
+          {
+            "node": "Telegram — إشعار المدير",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram — إشعار المدير": {
+      "main": [
+        [
+          {
+            "node": "Response — طلب مقبول",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — قرار الإجازة": {
+      "main": [
+        [
+          {
+            "node": "Code — معالجة القرار",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — معالجة القرار": {
+      "main": [
+        [
+          {
+            "node": "Sheets — قراءة الإجازات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — قراءة الإجازات": {
+      "main": [
+        [
+          {
+            "node": "Code — إيجاد الإجازة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — إيجاد الإجازة": {
+      "main": [
+        [
+          {
+            "node": "Sheets — تحديث الإجازة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — تحديث الإجازة": {
+      "main": [
+        [
+          {
+            "node": "Telegram — إشعار الموظف بالقرار",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram — إشعار الموظف بالقرار": {
+      "main": [
+        [
+          {
+            "node": "Response — قرار مسجّل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — إضافة موظف": {
+      "main": [
+        [
+          {
+            "node": "Sheets — إضافة موظف",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — إضافة موظف": {
+      "main": [
+        [
+          {
+            "node": "Response — نجاح الإضافة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — تسجيل فحص المجزرة": {
+      "main": [
+        [
+          {
+            "node": "Sheets — حفظ فحص المجزرة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — حفظ فحص المجزرة": {
+      "main": [
+        [
+          {
+            "node": "Response — نجاح تسجيل المجزرة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — قائمة فحص المجازر": {
+      "main": [
+        [
+          {
+            "node": "Sheets — قراءة سجلات المجازر",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sheets — قراءة سجلات المجازر": {
+      "main": [
+        [
+          {
+            "node": "Code — معالجة بيانات المجازر",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — معالجة بيانات المجازر": {
+      "main": [
+        [
+          {
+            "node": "Response — إرجاع قائمة المجازر",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

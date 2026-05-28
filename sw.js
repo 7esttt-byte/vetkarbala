@@ -73,3 +73,25 @@ self.addEventListener('fetch', e => {
 self.addEventListener('message', e => {
   if (e.data === 'skipWaiting') self.skipWaiting();
 });
+
+/* ─── NOTIFICATION CLICK HANDLER ─── */
+self.addEventListener('notificationclick', e => {
+  const notification = e.notification;
+  notification.close();
+  
+  e.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      // Find a window client that is already open and focus it
+      for (let i = 0; i < windowClients.length; i++) {
+        const client = windowClients[i];
+        if (client.url.includes('index.html') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      // If no window is open, open a new one
+      if (clients.openWindow) {
+        return clients.openWindow('./index.html');
+      }
+    })
+  );
+});
