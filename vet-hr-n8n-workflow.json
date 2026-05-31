@@ -1,0 +1,1283 @@
+{
+  "name": "VetHR Smart Attendance & Inspection System (Supabase V2 Edition)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/login",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "login-webhook-id",
+      "name": "Webhook — تسجيل الدخول (PWA Login)",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/employees?username=eq.{{ $json.body.username || \"\" }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "login-supabase-select-id",
+      "name": "Supabase — جلب بيانات الدخول",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -160,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $(\"Webhook — تسجيل الدخول (PWA Login)\").item.json.body || $(\"Webhook — تسجيل الدخول (PWA Login)\").item.json;\nconst empList = $input.all();\n\nif (empList.length === 0) {\n  return [{ json: { ok: false, message: \"اسم المستخدم غير موجود\" } }];\n}\n\nconst emp = empList[0].json;\n\nif (String(emp.password).trim() !== String(body.password || \"\").trim()) {\n  return [{ json: { ok: false, message: \"كلمة المرور غير صحيحة\" } }];\n}\n\nreturn [{ \n  json: { \n    ok: true, \n    user: { \n      id: emp.emp_id, \n      name: emp.full_name, \n      username: emp.username, \n      role: emp.role, \n      dept: emp.dept || \"\", \n      tg: emp.telegram_id || \"\" \n    } \n  } \n}];"
+      },
+      "id": "login-code-check-id",
+      "name": "Code — فحص كلمة المرور",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "login-response-id",
+      "name": "Response — نتيجة الدخول",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        280,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/employees",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "employees-webhook-id",
+      "name": "Webhook — قائمة الموظفين",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/employees?select=emp_id,username,full_name,dept,telegram_id,role",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "employees-supabase-select-id",
+      "name": "Supabase — جلب الموظفين",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -160,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const list = $input.all().map(e => ({\n  id: e.json.emp_id,\n  name: e.json.full_name,\n  username: e.json.username,\n  role: e.json.role,\n  dept: e.json.dept || \"\",\n  tg: e.json.telegram_id || \"\"\n}));\n\nreturn [{ json: { ok: true, employees: list } }];"
+      },
+      "id": "employees-code-format-id",
+      "name": "Code — تنسيق الموظفين",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "employees-response-id",
+      "name": "Response — قائمة الموظفين",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        280,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/attendance",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "attendance-webhook-id",
+      "name": "Webhook — قائمة الحضور",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/attendance?select=*&order=date.desc,check_in.desc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "attendance-supabase-select-id",
+      "name": "Supabase — جلب الحضور",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -160,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const list = $input.all().map((e, idx) => ({\n  id: 'A' + idx,\n  empId: e.json.emp_id,\n  empName: e.json.emp_name,\n  dept: e.json.dept || \"\",\n  date: e.json.date,\n  checkIn: e.json.check_in ? e.json.check_in.substr(0, 5) : null,\n  checkOut: e.json.check_out ? e.json.check_out.substr(0, 5) : null,\n  workedHours: e.json.worked_hours || null,\n  branch: e.json.branch || \"\",\n  st: e.json.status || \"present\"\n}));\n\nreturn [{ json: { ok: true, attendance: list } }];"
+      },
+      "id": "attendance-code-format-id",
+      "name": "Code — تنسيق الحضور",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "attendance-response-id",
+      "name": "Response — قائمة الحضور",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        280,
+        -600
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/leaves",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "leaves-webhook-id",
+      "name": "Webhook — قائمة الإجازات",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        -800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/leaves?select=*&order=req_at.desc",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "leaves-supabase-select-id",
+      "name": "Supabase — جلب الإجازات",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        -160,
+        -800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const list = $input.all().map(e => ({\n  id: e.json.leave_id,\n  empId: e.json.emp_id,\n  empName: e.json.emp_name,\n  dept: e.json.dept || \"\",\n  type: e.json.leave_type === \"اعتيادية\" ? \"regular\" : (e.json.leave_type === \"زمنية\" ? \"timed\" : e.json.leave_type),\n  s: e.json.start_date,\n  e: e.json.end_date,\n  hrs: e.json.hours || null,\n  rsn: e.json.reason || \"\",\n  st: e.json.status === \"بانتظار الموافقة\" ? \"pending\" : (e.json.status === \"مقبولة\" ? \"approved\" : \"rejected\"),\n  at: e.json.req_at ? e.json.req_at.replace(\"T\", \" \").substr(0, 16) : \"\",\n  by: e.json.approved_by || \"\",\n  bat: e.json.decision_at ? e.json.decision_at.replace(\"T\", \" \").substr(0, 16) : \"\"\n}));\n\nreturn [{ json: { ok: true, leaves: list } }];"
+      },
+      "id": "leaves-code-format-id",
+      "name": "Code — تنسيق الإجازات",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        60,
+        -800
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {}
+      },
+      "id": "leaves-response-id",
+      "name": "Response — قائمة الإجازات",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        280,
+        -800
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/checkin",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "524ce7bd-d076-4ac8-8923-61a7f754c431",
+      "name": "Webhook — تسجيل الدخول",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/checkout",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "3835dcc2-741a-4037-be7e-6b878f12b06b",
+      "name": "Webhook — تسجيل الخروج",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const LOCATIONS = [\n  { id: 'LOC1', name: 'مقر إدارة المستشفى البيطري (حي التعاون)',      lat: 32.58591, lng: 44.02225, r: 150 },\n  { id: 'LOC2', name: 'بناية مختبر المستشفى البيطري (حي التعاون)',      lat: 32.58575, lng: 44.02240, r: 150 },\n  { id: 'LOC3', name: 'بناية شعبة العيادة الخارجية (حي التعاون)',    lat: 32.58610, lng: 44.02210, r: 150 }\n];\n\nfunction hav(a, b, c, d) {\n  const R = 6371000;\n  const dL = (c - a) * Math.PI / 180;\n  const dl = (d - b) * Math.PI / 180;\n  const x = Math.sin(dL / 2) ** 2 + Math.cos(a * Math.PI / 180) * Math.cos(c * Math.PI / 180) * Math.sin(dl / 2) ** 2;\n  return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));\n}\n\nconst body = $input.item.json.body || $input.item.json;\nconst { empId, empName, lat, lng, action, dept, telegramId } = body;\n\nif (!empId || !lat || !lng) {\n  return [{ json: { ok: false, message: \"بيانات ناقصة (رقم الموظف أو الإحداثيات)\", empId, action } }];\n}\n\nconst parsedLat = parseFloat(lat);\nconst parsedLng = parseFloat(lng);\n\nlet nearestBranch = null;\nlet minDistance = Infinity;\n\nfor (const loc of LOCATIONS) {\n  const d = Math.round(hav(parsedLat, parsedLng, loc.lat, loc.lng));\n  if (d < minDistance) {\n    minDistance = d;\n    nearestBranch = loc;\n  }\n}\n\nif (minDistance > nearestBranch.r) {\n  const allDists = LOCATIONS.map(l => `📌 ${l.name}: ${Math.round(hav(parsedLat, parsedLng, l.lat, l.lng))}م`).join(\" | \");\n  return [{ \n    json: { \n      ok: false, \n      message: `خارج نطاق جميع مباني المستشفى — الأقرب: ${minDistance}م لـ ${nearestBranch.name}. المسافات الحالية: [${allDists}]`, \n      empId, \n      empName, \n      distance: minDistance, \n      action \n    } \n  }];\n}\n\nconst iraqTime = new Date(Date.now() + 3 * 3600000);\nconst timeStr = iraqTime.toISOString().substr(11, 5);\nconst dateStr = iraqTime.toISOString().substr(0, 10);\n\nreturn [{ \n  json: { \n    ok: true, \n    empId, \n    empName: empName || empId, \n    dept: dept || \"\", \n    telegramId: telegramId || \"\", \n    lat: parsedLat, \n    lng: parsedLng, \n    distance: minDistance, \n    branch: nearestBranch.name,\n    branchId: nearestBranch.id,\n    timeStr, \n    dateStr, \n    action: action || \"checkin\" \n  } \n}];"
+      },
+      "id": "b1fdfe69-0270-49d9-872a-9aa9f939a58d",
+      "name": "Code — التحقق من GPS",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        170
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "gps-ok",
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "771826f2-eb14-4769-b323-4c07c2874771",
+      "name": "IF — الموقع صحيح؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        60,
+        170
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, message: $json.message, distance: $json.distance }) }}",
+        "options": {}
+      },
+      "id": "a398a597-8902-46db-a5c1-67ac447625d0",
+      "name": "Response — رفض GPS",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        280,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/employees?or=(emp_id.eq.{{ $json.empId }},username.eq.{{ $json.empId }})",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "70841922-d205-4929-9a3b-477d41ab32db",
+      "name": "Supabase — قراءة الموظفين",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        280,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const g = $(\"Code — التحقق من GPS\").item.json;\nconst empList = $input.all();\n\nif (empList.length === 0) {\n  return [{ json: { ok: false, message: \"الموظف \" + g.empId + \" غير موجود في النظام\" } }];\n}\n\nconst emp = empList[0].json;\n\nreturn [{ \n  json: { \n    ok: true, \n    empId: emp.emp_id, \n    empName: emp.full_name, \n    dept: emp.dept || \"\", \n    telegramId: emp.telegram_id || g.telegramId || \"\", \n    lat: g.lat, \n    lng: g.lng, \n    distance: g.distance, \n    timeStr: g.timeStr, \n    dateStr: g.dateStr, \n    action: g.action, \n    branch: g.branch, \n    branchId: g.branchId \n  } \n}];"
+      },
+      "id": "80d6c5a4-097e-4728-98b4-8ca934c463f5",
+      "name": "Code — مطابقة الموظف",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        500,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/attendance?emp_id=eq.{{ $json.empId }}&date=eq.{{ $json.dateStr }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "adf85353-6f9b-4dfb-918d-9f5601c8b7e2",
+      "name": "Supabase — قراءة حضور اليوم",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        720,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const emp = $(\"Code — مطابقة الموظف\").item.json;\nconst attList = $input.all();\n\nconst rec = attList.length > 0 ? attList[0].json : null;\n\nlet workedHours = null;\nif (emp.action === \"checkout\" && rec && rec.check_in) {\n  const [h1, m1] = String(rec.check_in).split(\":\").map(Number);\n  const [h2, m2] = emp.timeStr.split(\":\").map(Number);\n  const mins = (h2 * 60 + m2) - (h1 * 60 + m1);\n  if (mins > 0) {\n    workedHours = Math.floor(mins / 60) + \"س \" + (mins % 60) + \"د\";\n  }\n}\n\nreturn [{ \n  json: { \n    ...emp, \n    existingRecord: rec, \n    isNewRecord: !rec, \n    workedHours \n  } \n}];"
+      },
+      "id": "5851cb1a-c2ce-4bf7-9c39-3988dc8a0e40",
+      "name": "Code — فحص سجل اليوم",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        940,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "conditions": [
+            {
+              "id": "is-checkin",
+              "leftValue": "={{ $json.action }}",
+              "rightValue": "checkin",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and",
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          }
+        },
+        "options": {}
+      },
+      "id": "7e260838-a191-48a7-a1a9-e1e418fa6b97",
+      "name": "IF — دخول أم خروج؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        1160,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/attendance",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  emp_id: $json.empId,\n  emp_name: $json.empName,\n  dept: $json.dept,\n  date: $json.dateStr,\n  check_in: $json.timeStr,\n  branch: $json.branch,\n  lat: parseFloat($json.lat),\n  lng: parseFloat($json.lng),\n  distance: parseFloat($json.distance),\n  status: 'حاضر'\n}) }}",
+        "options": {}
+      },
+      "id": "67b01f12-eee7-47d8-a438-bf5af726d6e1",
+      "name": "Supabase — تسجيل الدخول",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1380,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/attendance",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  emp_id: $json.empId,\n  emp_name: $json.empName,\n  dept: $json.dept,\n  date: $json.dateStr,\n  check_out: $json.timeStr,\n  worked_hours: $json.workedHours,\n  branch: $json.branch,\n  status: 'حاضر'\n}) }}",
+        "options": {}
+      },
+      "id": "ef2b835d-8a08-4db3-92a0-8b62ccb05d7d",
+      "name": "Supabase — تسجيل الخروج",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        1380,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramId || \"6933149494\" }}",
+        "text": "={{ $json.action === \"checkin\" ? \"🟢 تم تسجيل دخولك بنجاح للدوام في \" + $json.branch + \"\\n⏱️ الساعة: \" + $json.timeStr : \"🚪 تم تسجيل خروجك وانصرافك بنجاح من \" + $json.branch + \"\\n⏱️ الساعة: \" + $json.timeStr + ($json.workedHours ? \"\\n⏳ ساعات العمل: \" + $json.workedHours : \"\") }}",
+        "additionalFields": {}
+      },
+      "id": "32b60a08-afd4-4155-90b3-d81129f5b79e",
+      "name": "Telegram — إشعار الموظف",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        1600,
+        80
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, message: $(\"Code — فحص سجل اليوم\").item.json.action === \"checkin\" ? \"تم تسجيل الدخول — \" + $(\"Code — فحص سجل اليوم\").item.json.timeStr : \"تم تسجيل الخروج — \" + $(\"Code — فحص سجل اليوم\").item.json.timeStr, time: $(\"Code — فحص سجل اليوم\").item.json.timeStr, distance: $(\"Code — فحص سجل اليوم\").item.json.distance, branch: $(\"Code — فحص سجل اليوم\").item.json.branch }) }}",
+        "options": {}
+      },
+      "id": "fb122efa-8e2c-4f9f-ba29-d3348b30f04f",
+      "name": "Response — نجاح",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1820,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/leave-request",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "788a18ae-af06-4157-9f5b-3b59fa96a269",
+      "name": "Webhook — طلب إجازة",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\nconst { empId, empName, dept, type, startDate, endDate, hours, reason, telegramId } = body;\n\nif (!empId || !type || !startDate || !reason) {\n  return [{ json: { ok: false, message: \"بيانات ناقصة في طلب الإجازة\" } }];\n}\n\nconst iraqTime = new Date(Date.now() + 3 * 3600000);\nconst reqAt = iraqTime.toISOString().substr(0, 16).replace(\"T\", \" \");\nconst leaveId = \"LV-\" + Date.now();\n\nlet leaveType = \"\";\nif (type === \"regular\") leaveType = \"اعتيادية\";\nelse if (type === \"timed\") leaveType = \"زمنية\";\nelse leaveType = type;\n\nif (type === \"timed\" && (!hours || parseInt(hours) < 1 || parseInt(hours) > 8)) {\n  return [{ json: { ok: false, message: \"الإجازة الزمنية: الساعات يجب بين 1 و 8\" } }];\n}\n\nreturn [{ \n  json: { \n    ok: true, \n    \"معرف الإجازة\": leaveId, \n    \"رقم الموظف\": empId, \n    \"اسم الموظف\": empName || empId, \n    \"القسم\": dept || \"\", \n    \"نوع الإجازة\": leaveType, \n    \"تاريخ البداية\": startDate, \n    \"تاريخ النهاية\": type === \"timed\" ? startDate : (endDate || startDate), \n    \"عدد الساعات\": type === \"timed\" ? parseInt(hours) : null, \n    \"السبب\": reason, \n    \"الحالة\": \"بانتظار الموافقة\", \n    \"تاريخ الطلب\": reqAt, \n    \"موافقة المدير\": \"\", \n    \"تاريخ القرار\": \"\", \n    \"تلغرام الموظف\": telegramId || \"\", \n    leaveId, \n    empId, \n    empName: empName || empId, \n    dept: dept || \"\", \n    telegramId: telegramId || \"\", \n    type, \n    startDate, \n    endDate: type === \"timed\" ? startDate : (endDate || startDate), \n    hours: type === \"timed\" ? parseInt(hours) : null, \n    reason, \n    reqAt \n  } \n}];"
+      },
+      "id": "3b524a63-2ad6-41eb-a8b3-5c7e5facea59",
+      "name": "Code — معالجة الطلب",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "id": "leave-ok"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8ec11ddd-cf1f-4020-9e61-d05916607d14",
+      "name": "IF — الطلب صحيح؟",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        60,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/leaves",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  leave_id: $json[\"معرف الإجازة\"],\n  emp_id: $json[\"رقم الموظف\"],\n  emp_name: $json[\"اسم الموظف\"],\n  dept: $json[\"القسم\"],\n  leave_type: $json[\"نوع الإجازة\"],\n  start_date: $json[\"تاريخ البداية\"],\n  end_date: $json[\"تاريخ النهاية\"],\n  hours: $json[\"عدد الساعات\"] ? parseInt($json[\"عدد الساعات\"]) : null,\n  reason: $json[\"السبب\"],\n  status: $json[\"الحالة\"],\n  req_at: $json[\"تاريخ الطلب\"],\n  approved_by: null,\n  decision_at: null,\n  telegram_id: $json[\"تلغرام الموظف\"]\n}) }}",
+        "options": {}
+      },
+      "id": "cb53da35-ac93-4598-9cac-ecaca91fdb3e",
+      "name": "Supabase — حفظ طلب الإجازة",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        280,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: false, message: $json.message || \"خطأ في معالجة الطلب\" }) }}",
+        "options": {}
+      },
+      "id": "a7272455-9dc8-4fb4-8ad3-06cb3d414fb6",
+      "name": "Response — طلب مرفوض",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        280,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "6933149494",
+        "text": "={{ \"🚨 طلب إجازة جديد للمراجعة\\n👤 الموظف: \" + $json[\"اسم الموظف\"] + \"\\n🏢 القسم: \" + $json[\"القسم\"] + \"\\n📋 النوع: \" + $json[\"نوع الإجازة\"] + \"\\n📅 التاريخ: \" + $json[\"تاريخ البداية\"] + ($json[\"نوع الإجازة\"] == \"زمنية\" ? \" (⏱️ \" + $json[\"عدد الساعات\"] + \" ساعات)\" : \"\") + \"\\n📝 السبب: \" + $json[\"السبب\"] }}",
+        "additionalFields": {}
+      },
+      "id": "b517fcf6-3a60-42ee-b858-25b95fbfc219",
+      "name": "Telegram — إشعار المدير",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        500,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, leaveId: $(\"Code — معالجة الطلب\").item.json.leaveId, message: \"تم إرسال طلب الإجازة بنجاح — بانتظار موافقة المدير\" }) }}",
+        "options": {}
+      },
+      "id": "74c0ace2-c426-4d16-a42d-9964204d1901",
+      "name": "Response — طلب مقبول",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        720,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "vet-hr/leave-action",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "da3241c3-b9b8-4d2c-841f-12233365dedf",
+      "name": "Webhook — قرار الإجازة",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -380,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $input.item.json.body || $input.item.json;\nconst { leaveId, action, managerId, managerName } = body;\n\nif (!leaveId || !action) {\n  return [{ json: { ok: false, message: \"بيانات ناقصة (leaveId و action مطلوبان)\" } }];\n}\n\nconst iraqTime = new Date(Date.now() + 3 * 3600000);\nconst decisionAt = iraqTime.toISOString().substr(0, 16).replace(\"T\", \" \");\nconst newStatus = (action === \"approve\") ? \"مقبولة\" : \"مرفوضة\";\nconst managerDecision = managerName || \"المدير\";\n\nreturn [{ \n  json: { \n    ok: true, \n    leaveId, \n    action, \n    newStatus, \n    managerId: managerId || \"MGR\", \n    managerName: managerDecision, \n    decisionAt \n  } \n}];"
+      },
+      "id": "4e34041a-57b4-4c22-9b68-b129bd8415dc",
+      "name": "Code — معالجة القرار",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -160,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/leaves?leave_id=eq.{{ $json.leaveId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "66b007bb-e338-4402-b12b-d364ae5e7376",
+      "name": "Supabase — قراءة الإجازات",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        60,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ad = $(\"Code — معالجة القرار\").item.json;\nconst leaves = $input.all();\n\nif (leaves.length === 0) {\n  return [{ json: { ok: false, message: `طلب الإجازة ذو المعرف ${ad.leaveId} غير موجود` } }];\n}\n\nconst leave = leaves[0].json;\n\nreturn [{ \n  json: { \n    ok: true, \n    \"معرف الإجازة\": leave.leave_id, \n    \"الحالة\": ad.newStatus, \n    \"موافقة المدير\": ad.managerName, \n    \"تاريخ القرار\": ad.decisionAt, \n    \n    // Pass other details for downstream nodes\n    leaveId: leave.leave_id,\n    empId: leave.emp_id,\n    empName: leave.emp_name,\n    dept: leave.dept,\n    telegramId: leave.telegram_id,\n    type: leave.leave_type,\n    startDate: leave.start_date,\n    endDate: leave.end_date,\n    hours: leave.hours,\n    reason: leave.reason,\n    action: ad.action,\n    newStatus: ad.newStatus,\n    managerName: ad.managerName,\n    decisionAt: ad.decisionAt\n  } \n}];"
+      },
+      "id": "0503590e-270e-4212-9c0d-acae60e7ba81",
+      "name": "Code — إيجاد الإجازة",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        280,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://bcmtcqzwionthvcbqgjw.supabase.co/rest/v1/leaves?leave_id=eq.{{ $json.leaveId }}",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "apikey",
+              "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            },
+            {
+              "name": "Authorization",
+              "value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJjbXRjcXp3aW9udGh2Y2JxZ2p3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0ODM4MTEsImV4cCI6MjA5NTA1OTgxMX0.54VTIWbRrAEJQZgXun2EqIIDafXhEVUCF2QitKw_xAc"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({\n  status: $json[\"الحالة\"],\n  approved_by: $json[\"موافقة المدير\"],\n  decision_at: $json[\"تاريخ القرار\"]\n}) }}",
+        "options": {}
+      },
+      "id": "cc7c75ab-95c0-4c81-952d-c7dc47dcf7e5",
+      "name": "Supabase — تحديث الإجازة",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        500,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $json.telegramId || \"6933149494\" }}",
+        "text": "={{ $json.action === \"approve\" ? \"✅ تمت الموافقة على طلب إجازتك\\n\" + $json.type + \" — \" + $json.startDate + (($json.endDate && $json.endDate !== $json.startDate) ? \" إلى \" + $json.endDate : \"\") + (($json.hours) ? \"\\n⏱️ عدد الساعات: \" + $json.hours : \"\") : \"❌ تم رفض طلب إجازتك\\n\" + $json.type + \" — \" + $json.startDate }}",
+        "additionalFields": {}
+      },
+      "id": "896a64e8-d84f-4e50-a503-22b0b7bc9e4e",
+      "name": "Telegram — إشعار الموظف بالقرار",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        720,
+        800
+      ],
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ ok: true, message: $(\"Code — إيجاد الإجازة\").item.json.action === \"approve\" ? \"تمت الموافقة وإشعار الموظف\" : \"تم الرفض وإشعار الموظف\", leaveId: $(\"Code — إيجاد الإجازة\").item.json.leaveId, status: $(\"Code — إيجاد الإجازة\").item.json.newStatus }) }}",
+        "options": {}
+      },
+      "id": "185ad92f-0d01-4977-abb9-f5ed16dd75c6",
+      "name": "Response — قرار مسجّل",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        940,
+        800
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook — تسجيل الدخول (PWA Login)": {
+      "main": [
+        [
+          {
+            "node": "Supabase — جلب بيانات الدخول",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — جلب بيانات الدخول": {
+      "main": [
+        [
+          {
+            "node": "Code — فحص كلمة المرور",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — فحص كلمة المرور": {
+      "main": [
+        [
+          {
+            "node": "Response — نتيجة الدخول",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — قائمة الموظفين": {
+      "main": [
+        [
+          {
+            "node": "Supabase — جلب الموظفين",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — جلب الموظفين": {
+      "main": [
+        [
+          {
+            "node": "Code — تنسيق الموظفين",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — تنسيق الموظفين": {
+      "main": [
+        [
+          {
+            "node": "Response — قائمة الموظفين",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — قائمة الحضور": {
+      "main": [
+        [
+          {
+            "node": "Supabase — جلب الحضور",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — جلب الحضور": {
+      "main": [
+        [
+          {
+            "node": "Code — تنسيق الحضور",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — تنسيق الحضور": {
+      "main": [
+        [
+          {
+            "node": "Response — قائمة الحضور",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — قائمة الإجازات": {
+      "main": [
+        [
+          {
+            "node": "Supabase — جلب الإجازات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — جلب الإجازات": {
+      "main": [
+        [
+          {
+            "node": "Code — تنسيق الإجازات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — تنسيق الإجازات": {
+      "main": [
+        [
+          {
+            "node": "Response — قائمة الإجازات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — تسجيل الدخول": {
+      "main": [
+        [
+          {
+            "node": "Code — التحقق من GPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — تسجيل الخروج": {
+      "main": [
+        [
+          {
+            "node": "Code — التحقق من GPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — التحقق من GPS": {
+      "main": [
+        [
+          {
+            "node": "IF — الموقع صحيح؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — الموقع صحيح؟": {
+      "main": [
+        [
+          {
+            "node": "Supabase — قراءة الموظفين",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response — رفض GPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — قراءة الموظفين": {
+      "main": [
+        [
+          {
+            "node": "Code — مطابقة الموظف",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — مطابقة الموظف": {
+      "main": [
+        [
+          {
+            "node": "Supabase — قراءة حضور اليوم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — قراءة حضور اليوم": {
+      "main": [
+        [
+          {
+            "node": "Code — فحص سجل اليوم",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — فحص سجل اليوم": {
+      "main": [
+        [
+          {
+            "node": "IF — دخول أم خروج؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — دخول أم خروج؟": {
+      "main": [
+        [
+          {
+            "node": "Supabase — تسجيل الدخول",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Supabase — تسجيل الخروج",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — تسجيل الدخول": {
+      "main": [
+        [
+          {
+            "node": "Telegram — إشعار الموظف",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — تسجيل الخروج": {
+      "main": [
+        [
+          {
+            "node": "Telegram — إشعار الموظف",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram — إشعار الموظف": {
+      "main": [
+        [
+          {
+            "node": "Response — نجاح",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — طلب إجازة": {
+      "main": [
+        [
+          {
+            "node": "Code — معالجة الطلب",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — معالجة الطلب": {
+      "main": [
+        [
+          {
+            "node": "IF — الطلب صحيح؟",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "IF — الطلب صحيح؟": {
+      "main": [
+        [
+          {
+            "node": "Supabase — حفظ طلب الإجازة",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Response — طلب مرفوض",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — حفظ طلب الإجازة": {
+      "main": [
+        [
+          {
+            "node": "Telegram — إشعار المدير",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram — إشعار المدير": {
+      "main": [
+        [
+          {
+            "node": "Response — طلب مقبول",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook — قرار الإجازة": {
+      "main": [
+        [
+          {
+            "node": "Code — معالجة القرار",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — معالجة القرار": {
+      "main": [
+        [
+          {
+            "node": "Supabase — قراءة الإجازات",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — قراءة الإجازات": {
+      "main": [
+        [
+          {
+            "node": "Code — إيجاد الإجازة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code — إيجاد الإجازة": {
+      "main": [
+        [
+          {
+            "node": "Supabase — تحديث الإجازة",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase — تحديث الإجازة": {
+      "main": [
+        [
+          {
+            "node": "Telegram — إشعار الموظف بالقرار",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Telegram — إشعار الموظف بالقرار": {
+      "main": [
+        [
+          {
+            "node": "Response — قرار مسجّل",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
